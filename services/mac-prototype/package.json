@@ -1,0 +1,1 @@
+{"name":"jw-mac-prototype","version":"0.1.0","private":true,"type":"module","engines":{"node":">=24"},"scripts":{"start":"node server.mjs","test":"node --test test/*.test.mjs"},"dependencies":{"@simplewebauthn/browser":"14.0.0","@simplewebauthn/server":"14.0.1","viem":"2.56.3"},"devDependencies":{"@levischuck/tiny-cbor":"0.2.11"}}

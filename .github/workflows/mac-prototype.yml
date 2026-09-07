@@ -1,0 +1,26 @@
+name: Validate Mac prototype logic
+on:
+  push:
+    branches: [main]
+    paths: ['services/mac-prototype/**', '.github/workflows/mac-prototype.yml']
+  pull_request:
+    paths: ['services/mac-prototype/**', '.github/workflows/mac-prototype.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --prefix services/mac-prototype --ignore-scripts
+      - run: npm --prefix services/mac-prototype test
+      - run: python -m pip install -r services/mac-prototype/native/requirements.txt
+      - run: python services/mac-prototype/test/card_test.py

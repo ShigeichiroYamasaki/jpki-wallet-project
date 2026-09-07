@@ -62,10 +62,11 @@ const steps = [
         <a :href="withBase('/production-specification.html')">本番系仕様 →</a>
         <a :href="withBase('/prototype-specification.html')">プロトタイプ系詳細仕様・構成図 →</a>
         <a :href="withBase('/prototype-design.html')">Google Cloud・Docker 配置設計 →</a>
+        <a :href="withBase('/mac-prototype.html')">Mac実機プロトタイプの起動方法 →</a>
         <span>GitHubで原文・変更履歴を確認</span>
         <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/specification.md">仕様書 v0.4 ↗</a>
         <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/adr.md">ADR集・証拠基盤補足 ↗</a>
       </div>
-      <p class="scope-note">PF・証明書確認の模倣と基盤スケルトンを実装しています。クラウドは試験起動後、応答遅延のためプロトタイプを停止中です。認証サービスの提供開始、参加者募集、実機での一連の動作検証の完了を示すものではありません。</p></section>
+      <p class="scope-note">PF・証明書確認の模倣と基盤スケルトンに加え、Mac用のパスキー・カード連携・ウォレット模擬操作を実装しました。実Touch ID・実カードの成功は未確認です。クラウドは試験起動後、応答遅延のためプロトタイプを停止中です。認証サービスの提供開始、参加者募集、実機での一連の動作検証の完了を示すものではありません。</p></section>
   </div>
 </template>

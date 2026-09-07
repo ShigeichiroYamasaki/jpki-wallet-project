@@ -1,3 +1,8 @@
+::: info Mac実機用プロファイルを追加（2026年9月8日）
+[Mac実機プロトタイプ v0.1](https://shigeichiroyamasaki.github.io/jpki-wallet-project/mac-prototype.html)にパスキー・カード連携・ウォレット模擬操作を実装しました。以下のクラウド／専用拡張の設計全体を実装したものではなく、実Touch ID・実カード成功も未確認です。実装差分・起動方法は同ページを参照してください。
+:::
+
+
 # 鍵束縛プロトコル仕様書 v0.4
 
 更新日：2026年9月7日。本番系とプロトタイプ系を分離し、Macブラウザによるプロトタイプの詳細を追加。
@@ -198,6 +203,11 @@ DID/VCの採用は本システムの設計選択であり、あらゆるウォ�
 模倣シナリオの成功だけでは上記を満たさない。[旧仕様](https://shigeichiroyamasaki.github.io/jpki-wallet-project/specification-legacy.html)は検討履歴として参照し、本番提供の証拠には使用しない。
 
 ---
+
+::: info Mac実機用プロファイルを追加（2026年9月8日）
+[Mac実機プロトタイプ v0.1](https://shigeichiroyamasaki.github.io/jpki-wallet-project/mac-prototype.html)にパスキー・カード連携・ウォレット模擬操作を実装しました。以下のクラウド／専用拡張の設計全体を実装したものではなく、実Touch ID・実カード成功も未確認です。実装差分・起動方法は同ページを参照してください。
+:::
+
 
 # プロトタイプ系詳細仕様 v0.4
 

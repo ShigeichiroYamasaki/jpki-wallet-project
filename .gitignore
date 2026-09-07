@@ -8,3 +8,6 @@ docs/.vitepress/dist/
 work/
 *.tar
 *.tgz
+.local/
+.venv/
+__pycache__/

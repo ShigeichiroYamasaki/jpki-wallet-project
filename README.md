@@ -52,3 +52,7 @@ VitePress 1.6.4を採用し、開発サーバーの既知の脆弱性対策と�
 [設計書](docs/prototype-design.md) / [追加ADR](docs/prototype-decisions.md) / [Docker・GCE手順](infra/README.md)。GitHub Pagesは説明専用、サーバーはprivate e2-micro + IAPを設計。Google Cloudの実VMは未作成。PF・証明書確認はmockのみで、実本人確認やオンチェーン登録は未実装。
 
 仕様書を編集した後は `node scripts/sync-spec-downloads.mjs` でダウンロード版を同期し、`npm run docs:build` でリンクを確認してください。
+
+## Mac実機プロトタイプ
+
+`Start-JPKI-Prototype.command` で起動し、SafariまたはChromeで http://localhost:18080/app/ を開きます。初回は `./scripts/setup-mac-prototype.sh`。実装・試験の範囲は [Mac実機用README](services/mac-prototype/README.md) を参照してください。

@@ -1,3 +1,8 @@
+::: info Mac実機用プロファイルを追加（2026年9月8日）
+[Mac実機プロトタイプ v0.1](https://shigeichiroyamasaki.github.io/jpki-wallet-project/mac-prototype.html)にパスキー・カード連携・ウォレット模擬操作を実装しました。以下のクラウド／専用拡張の設計全体を実装したものではなく、実Touch ID・実カード成功も未確認です。実装差分・起動方法は同ページを参照してください。
+:::
+
+
 # プロトタイプ系詳細仕様 v0.4
 
 更新日：2026年9月7日。[仕様書総目次](https://shigeichiroyamasaki.github.io/jpki-wallet-project/specification.html) / [本番系](https://shigeichiroyamasaki.github.io/jpki-wallet-project/production-specification.html) / [配置・運用](https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype-design.html)

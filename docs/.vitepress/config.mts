@@ -12,13 +12,14 @@ export default defineConfig({
   themeConfig: {
     siteTitle: 'JPKI Wallet Project',
     nav: [
-      { text: 'プロジェクト', link: '/#about' },
+      { text: 'ホワイトペーパー', link: '/whitepaper' },
       { text: '認証のしくみ', link: '/#protocol' },
       { text: '仕様書 v0.3', link: '/specification' },
       { text: 'ADR', link: '/adr' },
       { text: 'プロトタイプ設計', link: '/prototype-design' }
     ],
     sidebar: {
+      '/whitepaper': [{ text: 'プロジェクト資料', items: [{ text: 'ホワイトペーパー v0.1', link: '/whitepaper' }, { text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR', link: '/adr' }, { text: 'プロトタイプ設計', link: '/prototype-design' }] }],
       '/prototype': [{ text: 'プロトタイプ', items: [{ text: 'Google Cloud・Docker設計', link: '/prototype-design' }, { text: '追加ADR案', link: '/prototype-decisions' }] }],
       '/specification': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR-001〜013', link: '/adr' }] }],
       '/adr': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR-001〜013', link: '/adr' }] }]
@@ -28,6 +29,6 @@ export default defineConfig({
     returnToTopLabel: 'ページの先頭へ',
     sidebarMenuLabel: 'メニュー',
     darkModeSwitchLabel: '表示切替',
-    footer: { message: 'JPKI × Passkey × Ethereum · 100人規模プロトタイプ / 実装前レビュー段階' }
+    footer: { message: 'JPKI × Passkey × Ethereum · 100人規模を目指すプロトタイプ / PF模倣実装・検証段階' }
   }
 })

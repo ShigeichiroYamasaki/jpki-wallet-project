@@ -8,7 +8,7 @@ title: プロトタイプ追加ADR案
 
 ## ADR-014：Google Cloud無料枠対象VMとDocker Compose
 
-**状態：ユーザー指定に基づく設計。実クラウド配置は未実施。**
+**状態：ユーザー指定に基づき既存VMへ配置・試験起動済み。応答遅延のためプロトタイプは停止中。**
 
 既存プロジェクト `sy-creator-first-demo-20260820` の `creator-first-navidrome-demo`（us-west1-b / e2-micro / Debian 12 / pd-standard 30 GB）へ、独立したComposeプロジェクト `jw-prototype` を同居させる。既存無料枠を使っているため新規VMを作成しない。API・worker・PostgreSQL・Caddyの合計メモリ上限は272 MiB、CPU上限は合計0.50。既存サービスと公開IPv6は維持し、公開IPv4・Cloud NATを追加しない。入口はlocalhost:18080。IAP接続は実環境で失敗したため、管理者IPv6 /128に限定した作業時間のみのSSH許可で配置する。PF・証明書確認はすべて模倣し、100人負荷試験は後工程とする。
 

@@ -10,7 +10,7 @@ title: プロトタイプ追加ADR案
 
 **状態：ユーザー指定に基づく設計。実クラウド配置は未実施。**
 
-非Spot e2-micro、無料枠対象us-west1、30 GB pd-standard、Container-Optimized OS、持込Docker Composeを採用する。API・worker・PostgreSQL・Caddyを1台へ配置する。GitHub Pagesは説明サイトとして残す。ユーザー指定により外部IPv4・Cloud NATを使用せず、IAP経由の開発者検証に限定する。外部JPKI/RPCは直接接続不可のため模擬連携から開始する。無料枠使用状況・米国配置可否を確認してから作成する。
+既存プロジェクト `sy-creator-first-demo-20260820` の `creator-first-navidrome-demo`（us-west1-b / e2-micro / Debian 12 / pd-standard 30 GB）へ、独立したComposeプロジェクト `jw-prototype` を同居させる。既存無料枠を使っているため新規VMを作成しない。API・worker・PostgreSQL・Caddyの合計メモリ上限は272 MiB、CPU上限は合計0.50。既存サービスと公開IPv6は維持し、公開IPv4・Cloud NATを追加しない。入口はlocalhost:18080。IAP接続は実環境で失敗したため、管理者IPv6 /128に限定した作業時間のみのSSH許可で配置する。PF・証明書確認はすべて模倣し、100人負荷試験は後工程とする。
 
 理由：100人登録規模のプロトタイプに対して運用対象を絞り、PostgreSQLによるセッション管理を維持できる。GKE/Cloud SQL/Cloud NATは初期構成から除く。影響：単一障害点、性能の実測が必要、全費用無料は保証できない。代替：Cloud Runは永続DB・worker設計の変更が必要、東京VMはCompute無料枠外。
 

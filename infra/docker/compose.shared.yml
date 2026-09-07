@@ -1,0 +1,30 @@
+# P0 mock-only limits for colocation; not sized for 100 concurrent users.
+services:
+  proxy:
+    mem_limit: 64m
+    cpus: 0.10
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/readyz]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  api:
+    mem_limit: 64m
+    cpus: 0.15
+    environment:
+      NODE_OPTIONS: --max-old-space-size=24
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:3000/healthz]
+  worker:
+    mem_limit: 64m
+    cpus: 0.10
+    environment:
+      NODE_OPTIONS: --max-old-space-size=16
+    healthcheck:
+      # /readyz queries the DB heartbeat, avoiding a second Node process.
+      test: [CMD, wget, -q, -O, /dev/null, http://api:3000/readyz]
+      timeout: 10s
+  db:
+    mem_limit: 80m
+    cpus: 0.15
+    command: [postgres, -c, shared_buffers=16MB, -c, max_connections=10, -c, work_mem=1MB, -c, log_statement=none]

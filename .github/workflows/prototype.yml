@@ -19,8 +19,8 @@ jobs:
           node-version: 24
       - run: node --test services/scaffold/mock-jpki.test.mjs
       - run: node scripts/init-scaffold.mjs
-      - run: docker compose -f infra/docker/compose.yml config --quiet
-      - run: docker compose -f infra/docker/compose.yml up -d --build --wait
+      - run: docker compose -f infra/docker/compose.yml -f infra/docker/compose.shared.yml config --quiet
+      - run: docker compose -f infra/docker/compose.yml -f infra/docker/compose.shared.yml up -d --build --wait
       - run: node scripts/smoke-prototype.mjs
       - if: always()
-        run: docker compose -f infra/docker/compose.yml down
+        run: docker compose -f infra/docker/compose.yml -f infra/docker/compose.shared.yml down

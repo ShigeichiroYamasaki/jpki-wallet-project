@@ -2,12 +2,12 @@
 title: Google Cloud・Docker プロトタイプ設計
 ---
 
-# Google Cloud・Docker プロトタイプ設計 v0.1
+# Google Cloud・Docker プロトタイプ設計 v0.2
 
 作成日・料金確認日：2026年9月7日。対象：[仕様書 v0.3](/specification)・[ADR-001〜013](/adr)。
 
 ::: warning 設計・実装状況
-この文書は実装に向けた補足設計です。公開IPv4を持たないDockerの基盤スケルトンを同梱していますが、PF・証明書確認の模倣アダプターを実装しています。実JPKI・WebAuthn・SIWE検証、参加者画面、オンチェーン登録機能は未実装です。Google Cloud VMの作成・実機E2E・100人の負荷検証は未実施です。法的整合性は専門家による精査が必要です。
+この文書は実装に向けた補足設計です。公開IPv4を持たないDockerの基盤スケルトンを同梱していますが、PF・証明書確認の模倣アダプターを実装しています。実JPKI・WebAuthn・SIWE検証、参加者画面、オンチェーン登録機能は未実装です。既存Google Cloud VMへ配置・試験起動しましたが、ディスク待ちと疎通失敗が続いたため、既存サービスを優先してプロトタイプを停止しました。常時稼働には資源配分の再検討が必要です。参加者の実機E2E・100人の負荷検証は未実施です。法的整合性は専門家による精査が必要です。
 :::
 
 ## 1. 今回の決定と前提
@@ -15,11 +15,11 @@ title: Google Cloud・Docker プロトタイプ設計
 | 項目 | 設計 |
 | --- | --- |
 | 公開ドキュメント | 既存のGitHub Pages / VitePressを継続 |
-| サーバー | Compute Engineの非Spot `e2-micro` 1台、Container-Optimized OS（cos-stable）、Docker Engine + 持込Compose |
+| サーバー | 既存 `creator-first-navidrome-demo`（e2-micro / Debian 12）へ同居。Docker Engine + 持込Compose |
 | リージョン | 無料枠対象の `us-west1` を設計上の初期値とする。実データの国外処理可否は導入前確認事項 |
 | ディスク | `pd-standard` 30 GB 1枚（OS・イメージ・DBを合算）。SSD・pd-balancedへ自動変更しない |
 | プロセス | Caddy / API / worker / PostgreSQL 16の4コンテナ。単一VM、冗長化なし |
-| ネットワーク | 公開IPv4なし（ユーザー指定）、Cloud NATなし。IAP + SSHトンネルで開発者だけが接続 |
+| ネットワーク | 公開IPv4・Cloud NATの追加なし。既存IPv6を維持し、管理者限定SSHトンネルで接続 |
 | バックエンド実装案 | Node.js 24 LTS、TypeScript + Express、pg、SimpleWebAuthn、siwe、viem。スケルトンはNode標準HTTP + pgのみ |
 | チェーン | 最初は模擬チェーン、次にEVMテストネット1種類。chain ID・RPC・コントラクトアドレス確定前は送信不可 |
 | 対象規模 | 最終目標は登録者100人。今回の非公開環境は開発者検証用で、100人向けアクセスは後工程 |
@@ -29,19 +29,19 @@ title: Google Cloud・Docker プロトタイプ設計
 
 ## 2. 無料枠の適用範囲と費用
 
-「無料枠対象の構成」と「請求額が0円」は区別します。同じ請求アカウントの既存VM等による枠の消費を導入前に確認します。
+「無料枠対象の構成」と「請求額が0円」は区別します。既存プロジェクト `sy-creator-first-demo-20260820` のe2-micro・30 GBディスクが使用中であることを確認し、新しいVM・ディスクを追加せず同居することを決定しました。
 
 | 資源 | 無料枠・費用の扱い |
 | --- | --- |
 | e2-micro | `us-west1` / `us-central1` / `us-east1` が対象。月の総時間相当の上限を共有 |
 | ディスク | standard persistent disk 30 GB-monthまで。追加ディスク・スナップショットは別途計算 |
 | 外向き通信 | Compute Engine無料枠は北米から対象宛先へ月1 GB。日本の参加者、RPC、バックアップ送信等も見積もる |
-| 外部IPv4 | 使用しない。VM作成時に `--no-address` を指定。Cloud NATも作成しない |
+| 外部IPv4 | 追加しない。既存VMのIPv6専用NICを維持。Cloud NATも作成しない |
 | その他 | PocketSign、RPC、メール、バックアップ、ログ、ドメイン等は個別。GKE・Cloud SQL・Cloud NAT・ロードバランサーは初期構成に含めない |
 
 Computeの根拠：[Google Cloud Free Tier](https://docs.cloud.google.com/free/docs/free-cloud-features)。対象外サービスの確認：[ネットワーク料金](https://cloud.google.com/vpc/network-pricing)。
 
-東京リージョンはこのCompute無料枠の対象外です。国内保管が必須なら、費用条件を見直して東京等を選びます。公開IPv4なしのため、外部API・RPCは直接利用できません。P0/P1では外部連携をせず、必要なイメージを開発機からIAPで転送します。Private Google Accessで任意のインターネットへ接続できるとは扱いません。実VM作成は対象プロジェクトと既存無料枠使用状況の確認後に行います。
+東京リージョンはこのCompute無料枠の対象外です。国内保管が必須なら、費用条件を見直して東京等を選びます。公開IPv4がないことだけで外部通信不可とは判断しません。既存VMは外部IPv6を持ちますが、P0のAPI・worker・DBをDocker internalネットワークに隔離し、PF・証明書確認はすべて模倣します。イメージは開発機で準備して転送します。
 
 料金アラートを設定しますが、alerts-only予算を課金停止装置として扱いません。Spend capを利用する場合も対象サービス・停止時の影響を別途確認します。[Cloud Billingの予算](https://docs.cloud.google.com/billing/docs/how-to/budgets)
 
@@ -51,32 +51,31 @@ Computeの根拠：[Google Cloud Free Tier](https://docs.cloud.google.com/free/d
 公開説明サイト：GitHub Pages（既存URLを維持）
 
 開発者PCの localhost:18080
-       │ IAP + SSHローカル転送
+       │ 管理者限定SSHローカル転送
        ▼
-Private Compute Engine（外部IPなし） / Docker Compose
+既存Compute Engine（外部IPv6のみ） / 独立Docker Compose
   Caddy ── API ── PostgreSQL ── worker
                 （模擬データのみ）
 
-外部PocketSign / EVM RPC：この構成からの直接通信は不可
+外部PF / EVM RPC：P0コンテナから接続せず、模倣のみ
 ```
 
-GitHub Pagesは説明専用です。今回のサーバーは開発者PCからIAP＋SSHトンネルを通して接続し、HTTP入口をホストの127.0.0.1:18080にだけbindします。API/DB/workerはinternalネットワークだけに所属させます。Caddyだけはlocalhostへのport公開用bridgeも持ちます。VM自体の外部IP・NATを設けません。証明書や秘密値をPagesへ渡しません。
+GitHub Pagesは説明専用です。今回のサーバーは開発者PCから管理者限定SSHトンネルを通して接続し、HTTP入口をホストの127.0.0.1:18080にだけbindします。API/DB/workerはinternalネットワークだけに所属させます。Caddyだけはlocalhostへのport公開用bridgeも持ちます。既存VMの外部IPv6と既存サービスを維持し、公開IPv4・NATは追加しません。証明書や秘密値をPagesへ渡しません。
 
 `jw.cacanet.org` のDNS作業は保留を維持します。DNS設定・公開TLS証明書は今回不要です。P1 WebAuthnは開発機のlocalhost Originを使い、スマホ用Origin・RP IDへ自動移行できるとは扱いません。P2の実機およびP3の100人利用には、別途プライベートアクセス方式または公開方式の合意が必要です。一般参加者にGCPのIAP/OS Login権限を配りません。
 
-DBポート5432・APIポート3000をホストに公開しません。GCPの入口はIAP送信元からのSSHだけとし、80/443も開けません。専用VPC・subnet、外部IPなし、NATなし、サービスアカウントなしで作成する計画です。Secret Manager等を使う場合に限り、Private Google Access・対応API経路・最小権限の専用アカウントを検証して追加します。
+DBポート5432・APIポート3000をホストに公開しません。既存サービスの80/443を変更しません。IAPはこのVMで `4047: Failed to lookup instance` となり利用を確認できていません。配置時は管理者のIPv6 /128だけにSSHを一時許可し、作業後に削除します。再接続時も管理者の送信元限定ルールを作業時間だけ設定します。
 
 ## 4. e2-microの資源配分
 
 | コンテナ | メモリ上限の初期値 | 役割 |
 | --- | --- | --- |
-| Caddy | 64 MiB | SSHトンネル内のHTTPルーティング |
-| API | 192 MiB | セッション・署名検証。Node heap上限128 MiB |
-| worker | 128 MiB | DB outbox確認・期限切れ清掃。Node heap上限64 MiB |
-| PostgreSQL | 256 MiB | shared_buffers 64 MB、max_connections 20 |
-| 残余 | 約384 MiB | OS・Docker等。保証値ではなく測定対象 |
+| Caddy | 64 MiB | ローカルHTTPルーティング、CPU 0.10 |
+| API | 64 MiB | P0模倣HTTP API、heap 24 MiB、CPU 0.15 |
+| worker | 64 MiB | P0 heartbeatのみ、heap 16 MiB、CPU 0.10 |
+| PostgreSQL | 80 MiB | shared_buffers 16 MB、max_connections 10、CPU 0.15 |
 
-APIプール最大4、worker最大2接続。ビルドは開発機またはCIで行い、VMへイメージを配置します。ZK証明生成、フルノード、音楽ファイル配信、重い分析をこのVMに同居させません。swapに本人確認情報が残ることを避けるため、実JPKIを扱う時はswap・core dumpを無効化します。メモリ不足なら同時受付を絞り、それでも不足する場合はサイズ・費用を再検討します。
+同居用 `compose.shared.yml` を重ね、上限合計272 MiB / 0.50 CPUとします。既存音楽サービスはそのまま稼働させます。P0専用の小規模検証構成であり、100人同時処理の容量保証ではありません。P1以降は再計測が必要です。起動前の利用可能メモリは約307 MiB、ディスク空き24 GBでした。APIプール最大4、worker最大2接続。ビルドは開発機またはCIで行います。メモリ不足時はプロトタイプを停止して既存サービスを優先します。
 
 ## 5. 鍵束縛フローの補完
 
@@ -205,9 +204,9 @@ P1/P2で必須の試験：nonce・origin・RP ID・wallet・chain・resources差
 
 5人同時操作でAPIのみのp95 500 ms以内・メモリ/ディスク余裕・OOMなしを測定目標にします。PF待ち・端末操作・チェーン確定時間は別指標。目標未達なら招待間隔や負荷制限を調整し、無料VMで100人同時処理可能と宣伝しません。
 
-## 11. VM作成前・実データ投入前の未決定事項
+## 11. 後続実装・実データ投入前の未決定事項
 
-- Google CloudプロジェクトID、請求アカウント内の既存無料枠消費、追加ディスク・通信等の費用の許容範囲。
+- 追加通信・バックアップ等の費用の許容範囲。既存プロジェクトと同居VMは確定済み。
 - 米国リージョンでの処理・保存、NPOの提供範囲、同意・規約、委託契約について専門家による精査。
 - 参加者用HTTPSホスト、RP ID、ネイティブアプリとの関連付け。保留中のDNS変更は再開しない。
 - 将来実接続時のみ：PocketSignの任意ダイジェスト署名、識別子継続性、冪等性・結果照会、失効検証、料金・保存ポリシー。今回の模倣実装はこれらの実仕様を保証しない。
@@ -218,7 +217,7 @@ P1/P2で必須の試験：nonce・origin・RP ID・wallet・chain・resources差
 
 [Docker・VM構成一式](https://github.com/ShigeichiroYamasaki/jpki-wallet-project/tree/main/infra) / [基盤サーバー](https://github.com/ShigeichiroYamasaki/jpki-wallet-project/tree/main/services/scaffold)
 
-従来の `create-with-container` に依存せず、Container-Optimized OSのDockerへ持ち込んだComposeとイメージを使用します。Googleのcontainer startup agentは2026年7月31日に停止対象となっています。[移行資料](https://docs.cloud.google.com/compute/docs/deprecations/container-startup-agent-on-compute)
+従来の `create-with-container` に依存せず、既存Debian 12のDockerへ持ち込んだComposeとイメージを使用します。Googleのcontainer startup agentは2026年7月31日に停止対象となっています。[移行資料](https://docs.cloud.google.com/compute/docs/deprecations/container-startup-agent-on-compute)
 
 ## 13. PF・証明書確認の模倣仕様（ユーザー指定）
 

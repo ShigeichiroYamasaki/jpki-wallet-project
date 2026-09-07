@@ -1,0 +1,103 @@
+name: jw-prototype
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-app: &app
+  image: ${JW_IMAGE:-jw-scaffold:dev}
+  build: ../../services/scaffold
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:size=16m,mode=1777"]
+  secrets: [db_password]
+  logging: *logging
+  networks: [backend]
+  pids_limit: 80
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  proxy:
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${JW_LOCAL_PORT:-18080}:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    read_only: true
+    tmpfs: [/data:size=8m, /config:size=8m]
+    cap_drop: [ALL]
+    # Official Caddy binary carries this file capability; retain it for exec.
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    pids_limit: 80
+    networks: [backend, ingress]
+    logging: *logging
+    depends_on:
+      api:
+        condition: service_healthy
+  api:
+    <<: *app
+    mem_limit: 192m
+    environment:
+      PGHOST: db
+      JPKI_PROVIDER: mock
+      NODE_OPTIONS: --max-old-space-size=128
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+  worker:
+    <<: *app
+    command: [node, worker.mjs]
+    mem_limit: 128m
+    environment:
+      PGHOST: db
+      NODE_OPTIONS: --max-old-space-size=64
+    healthcheck:
+      test: [CMD, node, check-worker.mjs]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jw_scaffold
+      POSTGRES_DB: jw_scaffold
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    command: [postgres, -c, shared_buffers=64MB, -c, max_connections=20, -c, work_mem=2MB, -c, log_statement=none]
+    secrets: [db_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/001-probe.sql:ro
+    shm_size: 64m
+    mem_limit: 256m
+    pids_limit: 100
+    networks: [backend]
+    logging: *logging
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U jw_scaffold -d jw_scaffold"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+networks:
+  ingress:
+    driver: bridge
+  backend:
+    internal: true
+volumes:
+  pgdata:
+secrets:
+  db_password:
+    file: ../../.secrets/db_password

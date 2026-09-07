@@ -15,9 +15,11 @@ export default defineConfig({
       { text: 'プロジェクト', link: '/#about' },
       { text: '認証のしくみ', link: '/#protocol' },
       { text: '仕様書 v0.3', link: '/specification' },
-      { text: 'ADR', link: '/adr' }
+      { text: 'ADR', link: '/adr' },
+      { text: 'プロトタイプ設計', link: '/prototype-design' }
     ],
     sidebar: {
+      '/prototype': [{ text: 'プロトタイプ', items: [{ text: 'Google Cloud・Docker設計', link: '/prototype-design' }, { text: '追加ADR案', link: '/prototype-decisions' }] }],
       '/specification': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR-001〜013', link: '/adr' }] }],
       '/adr': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR-001〜013', link: '/adr' }] }]
     },

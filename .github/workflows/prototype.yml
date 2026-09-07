@@ -1,0 +1,26 @@
+name: Validate Docker prototype
+on:
+  push:
+    branches: [main]
+    paths: ['infra/**', 'services/**', 'scripts/**', '.github/workflows/prototype.yml']
+  pull_request:
+    paths: ['infra/**', 'services/**', 'scripts/**', '.github/workflows/prototype.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: node --test services/scaffold/mock-jpki.test.mjs
+      - run: node scripts/init-scaffold.mjs
+      - run: docker compose -f infra/docker/compose.yml config --quiet
+      - run: docker compose -f infra/docker/compose.yml up -d --build --wait
+      - run: node scripts/smoke-prototype.mjs
+      - if: always()
+        run: docker compose -f infra/docker/compose.yml down

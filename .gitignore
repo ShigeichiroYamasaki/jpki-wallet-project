@@ -3,3 +3,8 @@ docs/.vitepress/cache/
 docs/.vitepress/dist/
 .DS_Store
 .env*
+
+.secrets/
+work/
+*.tar
+*.tgz

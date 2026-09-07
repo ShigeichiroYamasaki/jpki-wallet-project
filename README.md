@@ -43,3 +43,7 @@ PagesのベースパスをActionsからVitePressへ渡すため、リポジト�
 ## 依存ライブラリ
 
 VitePress 1.6.4を採用し、開発サーバーの既知の脆弱性対策としてViteを6.4.3へoverrideしています。lockfileを含めて管理します。
+
+## プロトタイプ基盤（公開IPv4なし・PF模倣）
+
+[設計書](docs/prototype-design.md) / [追加ADR](docs/prototype-decisions.md) / [Docker・GCE手順](infra/README.md)。GitHub Pagesは説明専用、サーバーはprivate e2-micro + IAPを設計。Google Cloudの実VMは未作成。PF・証明書確認はmockのみで、実本人確認やオンチェーン登録は未実装。

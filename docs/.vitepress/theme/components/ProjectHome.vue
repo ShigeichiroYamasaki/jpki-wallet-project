@@ -57,6 +57,12 @@ const steps = [
       <div class="privacy-list"><article><span>01</span><div><h3>基本4情報は永続化しない</h3><p>氏名・住所・生年月日・性別、JPKI証明書・署名値をDBやログに保存しない方針です。</p></div></article><article><span>02</span><div><h3>オンチェーンに本人確認の生データを置かない</h3><p>設計ではハッシュとウォレットアドレスの対応を記録します。公開された情報の関連性や、消去できない履歴も考慮します。</p></div></article><article><span>03</span><div><h3>より少ない開示で参加できる未来へ</h3><p>ゼロ知識証明による認証・属性・行動履歴の保護をロードマップに含めています。実装方式は未確定です。</p></div></article></div>
     </section>
 
-    <section id="documents" class="documents-section"><div class="section-heading"><div><p class="section-label">04 / OPEN DESIGN</p><h2>設計を読み、議論を進める。</h2></div><span class="review-badge">実装前レビュー段階</span></div><div class="document-grid"><a class="document-link" :href="withBase('/specification.html')"><span class="document-meta">SPECIFICATION / v0.3</span><h3>鍵束縛プロトコル仕様書 <span aria-hidden="true">↗</span></h3><p>全体構成からセッション管理、異常系、情報の取扱いまで。</p><span class="document-foot">全15節 · ADR-001〜013準拠</span></a><a class="document-link" :href="withBase('/adr.html')"><span class="document-meta">ARCHITECTURE DECISION RECORDS</span><h3>技術的な選択と、その理由 <span aria-hidden="true">↗</span></h3><p>採用した方針、検討した代替案、今後の検証課題を記録。</p><span class="document-foot">ADR-001〜013 · 決定事項と未確定事項</span></a></div><p class="scope-note">現在の対象は鍵束縛プロトコルの設計・実装準備です。認証サービスの提供開始、参加者募集、実機での一連の動作検証の完了を示すものではありません。</p></section>
+    <section id="documents" class="documents-section"><div class="section-heading"><div><p class="section-label">04 / OPEN DESIGN</p><h2>設計を読み、議論を進める。</h2></div><span class="review-badge">実装前レビュー段階</span></div><div class="document-grid"><a class="document-link" :href="withBase('/specification.html')"><span class="document-meta">SPECIFICATION / v0.3</span><h3>鍵束縛プロトコル仕様書 <span aria-hidden="true">↗</span></h3><p>全体構成からセッション管理、異常系、情報の取扱いまで。</p><span class="document-foot">全15節 · ADR-001〜013準拠</span></a><a class="document-link" :href="withBase('/adr.html')"><span class="document-meta">ARCHITECTURE DECISION RECORDS</span><h3>技術的な選択と、その理由 <span aria-hidden="true">↗</span></h3><p>採用した方針、検討した代替案、今後の検証課題を記録。</p><span class="document-foot">ADR-001〜013 · 決定事項と未確定事項</span></a></div>
+      <div class="source-links" aria-label="GitHub上の設計資料">
+        <span>GitHubで原文・変更履歴を確認</span>
+        <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/specification.md">仕様書 v0.3 ↗</a>
+        <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/adr.md">ADR-001〜013 ↗</a>
+      </div>
+      <p class="scope-note">現在の対象は鍵束縛プロトコルの設計・実装準備です。認証サービスの提供開始、参加者募集、実機での一連の動作検証の完了を示すものではありません。</p></section>
   </div>
 </template>

@@ -1,3 +1,5 @@
+現行の本番・プロトタイプ分離とMac接続は[ADR-022](https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype-decisions.html#adr-022)を参照してください。
+
 # ADR集: 鍵束縛プロトコルの技術的選択
 
 対象プロジェクト: 音楽サブスクリプションWeb3ガバナンス実験（100人プロトタイプ）

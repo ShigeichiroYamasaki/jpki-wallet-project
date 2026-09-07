@@ -22,7 +22,7 @@ const steps = [
           <p class="hero-note">100人規模のプロトタイプを計画 · 現在はPF模倣実装・検証段階</p>
         </div>
         <div class="binding-visual" role="img" aria-label="JPKIによる本人確認、パスキーによる継続認証、Ethereumウォレットを、一つの束縛レコードに結びつける概念図">
-          <div class="visual-topline"><span>IDENTITY BINDING</span><span>PROTOCOL / 0.3</span></div>
+          <div class="visual-topline"><span>IDENTITY BINDING</span><span>PROTOCOL / 0.4</span></div>
           <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
           <svg class="binding-lines" viewBox="0 0 480 400" aria-hidden="true"><path d="M240 92 L110 290 L370 290 Z"/><path d="M240 92 L240 220 M110 290 L240 220 M370 290 L240 220"/></svg>
           <div class="key-node jpki"><span class="node-icon">01</span><strong>JPKI</strong><small>本人確認</small></div>
@@ -34,7 +34,7 @@ const steps = [
       </div>
     </section>
 
-    <div class="project-strip"><div><span>EXPERIMENT</span><strong>100人規模</strong></div><div><span>PROTOCOL</span><strong>仕様書 v0.3</strong></div><div><span>DESIGN DECISIONS</span><strong>原ADR 13件＋補足</strong></div><div><span>STATUS</span><strong>PF模倣・検証中</strong></div></div>
+    <div class="project-strip"><div><span>EXPERIMENT</span><strong>100人規模</strong></div><div><span>PROTOCOL</span><strong>仕様書 v0.4</strong></div><div><span>DESIGN DECISIONS</span><strong>原ADR 13件＋補足</strong></div><div><span>STATUS</span><strong>PF模倣・検証中</strong></div></div>
 
     <aside class="legal-notice" aria-labelledby="legal-notice-title">
       <h2 id="legal-notice-title">法的整合性について</h2>
@@ -43,13 +43,13 @@ const steps = [
 
     <section id="about" class="content-section about-section">
       <div><p class="section-label">01 / PURPOSE</p><h2>つくる人と、聴く人が、<br>音楽のこれからを決める。</h2></div>
-      <div class="section-copy"><p>音楽サブスクリプションの資金配分や運営に、クリエイターと利用者が参加する。そのためには、一人ひとりの参加を確かめながら、個人情報を守る仕組みが必要です。</p><p>本プロジェクトでは、NPO法人が提供する認証サービスを構想しています。100人規模の実験を通じて、本人性・重複参加の抑止・使いやすさを検証します。</p><a class="text-link" :href="withBase('/specification.html#_1-目的')">プロジェクトの仕様を読む <span aria-hidden="true">→</span></a></div>
+      <div class="section-copy"><p>音楽サブスクリプションの資金配分や運営に、クリエイターと利用者が参加する。そのためには、一人ひとりの参加を確かめながら、個人情報を守る仕組みが必要です。</p><p>本プロジェクトでは、NPO法人が提供する認証サービスを構想しています。100人規模の実験を通じて、本人性・重複参加の抑止・使いやすさを検証します。</p><a class="text-link" :href="withBase('/specification.html')">プロジェクトの仕様を読む <span aria-hidden="true">→</span></a></div>
     </section>
 
     <section id="protocol" class="protocol-section">
       <div class="section-heading"><div><p class="section-label">02 / PROTOCOL</p><h2>3つの認証を、つなぐ。</h2></div><p>本人確認、継続認証、ウォレットの意思表示。<br>それぞれの役割を組み合わせる設計です。</p></div>
       <div class="steps-grid"><article v-for="step in steps" :key="step.number" class="step"><span class="step-number">{{ step.number }}</span><p class="step-tech">{{ step.name }}</p><h3>{{ step.label }}</h3><p>{{ step.text }}</p></article></div>
-      <div class="protocol-result"><span class="result-label">BINDING RECORD</span><p>検証結果を束縛レコードとして記録し、<strong>ガバナンス参加資格の確認</strong>につなげます。</p><a :href="withBase('/specification.html#_5-束縛セレモニーのシーケンス-正常系')" aria-label="仕様書で束縛セレモニーを読む">詳細 <span aria-hidden="true">↗</span></a></div>
+      <div class="protocol-result"><span class="result-label">BINDING RECORD</span><p>検証結果を束縛レコードとして記録し、<strong>ガバナンス参加資格の確認</strong>につなげます。</p><a :href="withBase('/prototype-specification.html')" aria-label="仕様書で束縛セレモニーを読む">詳細 <span aria-hidden="true">↗</span></a></div>
     </section>
 
     <section class="content-section privacy-section">
@@ -57,11 +57,13 @@ const steps = [
       <div class="privacy-list"><article><span>01</span><div><h3>基本4情報は永続化しない</h3><p>氏名・住所・生年月日・性別、JPKI証明書・署名値をDBやログに保存しない方針です。</p></div></article><article><span>02</span><div><h3>オンチェーンに本人確認の生データを置かない</h3><p>設計ではハッシュとウォレットアドレスの対応を記録します。公開された情報の関連性や、消去できない履歴も考慮します。</p></div></article><article><span>03</span><div><h3>より少ない開示で参加できる未来へ</h3><p>ゼロ知識証明による認証・属性・行動履歴の保護をロードマップに含めています。実装方式は未確定です。</p></div></article></div>
     </section>
 
-    <section id="documents" class="documents-section"><div class="section-heading"><div><p class="section-label">04 / OPEN DESIGN</p><h2>設計を読み、議論を進める。</h2></div><span class="review-badge">PF模倣実装・検証段階</span></div><div class="document-grid"><a class="document-link" :href="withBase('/whitepaper.html')"><span class="document-meta">WHITE PAPER / v0.2</span><h3>プロジェクト・ホワイトペーパー <span aria-hidden="true">↗</span></h3><p>NPOの役割、認証の設計、プライバシー、実験計画を一冊に。</p><span class="document-foot">公開検討稿 · 2026年9月7日</span></a><a class="document-link" :href="withBase('/specification.html')"><span class="document-meta">SPECIFICATION / v0.3</span><h3>鍵束縛プロトコル仕様書 <span aria-hidden="true">↗</span></h3><p>全体構成からセッション管理、異常系、情報の取扱いまで。</p><span class="document-foot">原仕様15節＋証拠基盤の補足仕様</span></a><a class="document-link" :href="withBase('/adr.html')"><span class="document-meta">ARCHITECTURE DECISION RECORDS</span><h3>技術的な選択と、その理由 <span aria-hidden="true">↗</span></h3><p>採用した方針、検討した代替案、今後の検証課題を記録。</p><span class="document-foot">ADR-001〜013・020・021 · 決定と追加方針</span></a></div>
+    <section id="documents" class="documents-section"><div class="section-heading"><div><p class="section-label">04 / OPEN DESIGN</p><h2>設計を読み、議論を進める。</h2></div><span class="review-badge">PF模倣実装・検証段階</span></div><div class="document-grid"><a class="document-link" :href="withBase('/whitepaper.html')"><span class="document-meta">WHITE PAPER / v0.2</span><h3>プロジェクト・ホワイトペーパー <span aria-hidden="true">↗</span></h3><p>NPOの役割、認証の設計、プライバシー、実験計画を一冊に。</p><span class="document-foot">公開検討稿 · 2026年9月7日</span></a><a class="document-link" :href="withBase('/specification.html')"><span class="document-meta">SPECIFICATION / v0.4</span><h3>鍵束縛プロトコル仕様書 <span aria-hidden="true">↗</span></h3><p>全体構成からセッション管理、異常系、情報の取扱いまで。</p><span class="document-foot">本番系・プロトタイプ系を分離</span></a><a class="document-link" :href="withBase('/adr.html')"><span class="document-meta">ARCHITECTURE DECISION RECORDS</span><h3>技術的な選択と、その理由 <span aria-hidden="true">↗</span></h3><p>採用した方針、検討した代替案、今後の検証課題を記録。</p><span class="document-foot">ADR-001〜013・020・021 · 決定と追加方針</span></a></div>
       <div class="source-links" aria-label="GitHub上の設計資料">
-        <a :href="withBase('/prototype-design.html')">Google Cloud・Docker プロトタイプ設計 →</a>
+        <a :href="withBase('/production-specification.html')">本番系仕様 →</a>
+        <a :href="withBase('/prototype-specification.html')">プロトタイプ系詳細仕様・構成図 →</a>
+        <a :href="withBase('/prototype-design.html')">Google Cloud・Docker 配置設計 →</a>
         <span>GitHubで原文・変更履歴を確認</span>
-        <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/specification.md">仕様書 v0.3 ↗</a>
+        <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/specification.md">仕様書 v0.4 ↗</a>
         <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/adr.md">ADR集・証拠基盤補足 ↗</a>
       </div>
       <p class="scope-note">PF・証明書確認の模倣と基盤スケルトンを実装しています。クラウドは試験起動後、応答遅延のためプロトタイプを停止中です。認証サービスの提供開始、参加者募集、実機での一連の動作検証の完了を示すものではありません。</p></section>

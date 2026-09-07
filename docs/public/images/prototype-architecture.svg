@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1100" viewBox="0 0 1120 1100" role="img" aria-labelledby="title desc">
+<title id="title">Macブラウザを使うプロトタイプ構成</title><desc id="desc">Mac内のカード接続試験と、合成データだけを扱うGoogle CloudのDocker系を分離。SSHトンネルで接続する。追加機能は未実装。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker></defs>
+<rect width="1120" height="1100" fill="#f8fafc"/>
+<style>text{font-family:Arial,"Hiragino Sans","Noto Sans JP",sans-serif;fill:#17243c} .small{font-size:16px} .title{font-size:26px;font-weight:700} .label{font-size:19px;font-weight:700}</style>
+<text x="30" y="42" class="title">プロトタイプ構成：Macブラウザ × PF模倣</text>
+<text x="30" y="72" class="small">v0.4 / 2026-09-07　実線枠＝P0実装　破線枠＝追加設計・要検証</text>
+<rect x="25" y="95" width="1070" height="475" rx="18" fill="#edf4ff" stroke="#9ab8dc"/>
+<text x="45" y="128" class="label">このMac：カードの実データは端末内で処理</text>
+<rect x="45" y="150" width="280" height="105" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="61" y="179" class="label">マイナンバーカード／リーダー</text>
+<text x="61" y="204" class="small">カード秘密鍵はカード内</text>
+<text x="61" y="229" class="small">リーダーをUSB等で接続</text>
+<rect x="390" y="150" width="315" height="105" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="406" y="179" class="label">ローカル連携プロセス</text>
+<text x="406" y="204" class="small">JPKI対応API／SDKは要検証</text>
+<text x="406" y="229" class="small">PIN入力・テスト署名・検証</text>
+<rect x="770" y="150" width="300" height="105" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="786" y="179" class="label">専用ブラウザ拡張</text>
+<text x="786" y="204" class="small">Native Messaging候補</text>
+<text x="786" y="229" class="small">許可Origin・タブを制限</text>
+<polyline points="325,202 390,202" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="705,202 770,202" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="390" y="315" width="680" height="115" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="406" y="344" class="label">ブラウザUI【追加設計】</text>
+<text x="406" y="369" class="small">http://localhost:18080/app/　RP ID: localhost</text>
+<text x="406" y="394" class="small">カード状態とPF模倣状態を別表示。実カード出力は送信しない。</text>
+<polyline points="920,255 920,315" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="730" y="285" class="small">ローカル試験の合否のみ</text>
+<rect x="45" y="305" width="280" height="80" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="61" y="334" class="label">パスキー／試験用EOA</text>
+<text x="61" y="359" class="small">WebAuthn・SIWE・操作署名</text>
+<polyline points="325,348 390,348" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="45" y="415" width="280" height="80" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="61" y="444" class="label">第三者検証ツール</text>
+<text x="61" y="469" class="small">合成VC・証拠exportを検証</text>
+<polyline points="390,405 355,405 355,455 325,455" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="390" y="468" class="small">サーバー入力：合成人物・試験用署名・合成操作だけ</text>
+<rect x="390" y="492" width="680" height="58" rx="12" fill="#fff" stroke="#94a3b8"/>
+<text x="406" y="521" class="label">管理者SSHトンネル：Mac loopback → VM loopback</text>
+<polyline points="730,430 730,492" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="730,550 730,650" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="750" y="602" class="small">SSH暗号化通信／既存IPv6</text>
+<rect x="25" y="620" width="1070" height="375" rx="18" fill="#eff8f3" stroke="#9ec4ad"/>
+<text x="45" y="650" class="label">Google Cloud：既存VM／Docker Compose</text>
+<rect x="580" y="675" width="490" height="65" rx="12" fill="#fff" stroke="#94a3b8"/>
+<text x="596" y="704" class="label">Caddy：127.0.0.1:18080 → :8080</text>
+<polyline points="730,650 730,675" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="580" y="780" width="490" height="105" rx="12" fill="#fff" stroke="#94a3b8"/>
+<text x="596" y="809" class="label">API：Node HTTP【P0実装】</text>
+<text x="596" y="834" class="small">PF模倣はAPI内の関数（外部通信なし）</text>
+<text x="596" y="859" class="small">セッション・署名・VCは追加設計</text>
+<polyline points="825,740 825,780" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="45" y="695" width="450" height="80" rx="12" fill="#fff" stroke="#94a3b8"/>
+<text x="61" y="724" class="label">PostgreSQL【P0実装】</text>
+<text x="61" y="749" class="small">現状はruntime_probeのみ。業務表は追加。</text>
+<polyline points="580,815 530,815 530,735 495,735" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="45" y="805" width="450" height="70" rx="12" fill="#fff" stroke="#94a3b8"/>
+<text x="61" y="834" class="label">worker【P0実装】</text>
+<text x="61" y="859" class="small">現状heartbeatのみ。模擬実行は追加。</text>
+<polyline points="270,805 270,775" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="45" y="905" width="1025" height="65" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
+<text x="61" y="934" class="label">証拠庫・VC状態／発行者鍵履歴【追加設計】　合成データを暗号化して限定開示</text>
+<polyline points="825,885 825,905" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="45" y="1027" class="small">公開IPv4・NATの追加なし／API・DBはホスト非公開／PF・チェーンは模倣</text>
+<text x="45" y="1055" class="small">GitHub Pagesは説明資料のみ。実PF・実権利操作・外部タイムスタンプは後工程。</text>
+<text x="45" y="1083" class="small">クラウドは停止済みという配置記録。図は稼働確認や機能実装の完了を示さない。</text>
+</svg>

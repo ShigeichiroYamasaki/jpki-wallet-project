@@ -34,11 +34,14 @@ PagesのベースパスをActionsからVitePressへ渡すため、リポジト�
 
 - `docs/index.md` / `.vitepress/theme/components/ProjectHome.vue`: トップページ
 - `docs/.vitepress/theme/style.css`: レスポンシブデザイン
-- `docs/specification.md`: 提供された仕様書 v0.3（案内のみ追加）
-- `docs/adr.md`: 提供されたADR-001〜013（案内のみ追加）
-- `docs/public/documents/`: 提供文書のMarkdown原本
+- `docs/specification.md`: 仕様v0.4の総目次・共通証拠要件
+- `docs/production-specification.md`: 本番系の要求仕様
+- `docs/prototype-specification.md`: Mac・カード連携・PF模倣の詳細仕様
+- `docs/specification-legacy.md`: 分離前の旧仕様v0.3（履歴）
+- `docs/adr.md`: 原ADRと証拠基盤の追加ADR。Mac構成のADR-022は `docs/prototype-decisions.md`
+- `docs/public/documents/`: 現行仕様の統合Markdown・系別Markdownと旧版
 
-原文の技術・法務・製品仕様に関する主張は未検証です。文書内のMermaid記法は原文のコードブロックとして掲載しています。トップページの認証図は独立したHTML/SVGによる概念図です。このサイトは説明用で、本人確認やウォレット接続の機能は実装していません。
+原文の技術・法務・製品仕様に関する主張は未検証です。文書内のMermaid記法は原文のコードブロックとして掲載しています。プロトタイプ構成図は `docs/public/images/prototype-architecture.svg`。トップページの認証図は独立したHTML/SVGによる概念図です。このサイトは説明用で、本人確認やウォレット接続の機能は実装していません。
 
 ## 依存ライブラリ
 
@@ -47,3 +50,5 @@ VitePress 1.6.4を採用し、開発サーバーの既知の脆弱性対策と�
 ## プロトタイプ基盤（公開IPv4なし・PF模倣）
 
 [設計書](docs/prototype-design.md) / [追加ADR](docs/prototype-decisions.md) / [Docker・GCE手順](infra/README.md)。GitHub Pagesは説明専用、サーバーはprivate e2-micro + IAPを設計。Google Cloudの実VMは未作成。PF・証明書確認はmockのみで、実本人確認やオンチェーン登録は未実装。
+
+仕様書を編集した後は `node scripts/sync-spec-downloads.mjs` でダウンロード版を同期し、`npm run docs:build` でリンクを確認してください。

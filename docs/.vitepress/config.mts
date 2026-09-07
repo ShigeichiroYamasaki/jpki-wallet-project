@@ -14,15 +14,16 @@ export default defineConfig({
     nav: [
       { text: 'ホワイトペーパー', link: '/whitepaper' },
       { text: '認証のしくみ', link: '/#protocol' },
-      { text: '仕様書 v0.3', link: '/specification' },
+      { text: '仕様書 v0.4', link: '/specification' },
       { text: 'ADR', link: '/adr' },
       { text: 'プロトタイプ設計', link: '/prototype-design' }
     ],
     sidebar: {
-      '/whitepaper': [{ text: 'プロジェクト資料', items: [{ text: 'ホワイトペーパー v0.2', link: '/whitepaper' }, { text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR', link: '/adr' }, { text: 'プロトタイプ設計', link: '/prototype-design' }] }],
-      '/prototype': [{ text: 'プロトタイプ', items: [{ text: 'Google Cloud・Docker設計', link: '/prototype-design' }, { text: '追加ADR案', link: '/prototype-decisions' }] }],
-      '/specification': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR集・証拠基盤補足', link: '/adr' }] }],
-      '/adr': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.3', link: '/specification' }, { text: 'ADR集・証拠基盤補足', link: '/adr' }] }]
+      '/whitepaper': [{ text: 'プロジェクト資料', items: [{ text: 'ホワイトペーパー v0.2', link: '/whitepaper' }, { text: '仕様書 v0.4', link: '/specification' }, { text: 'ADR', link: '/adr' }, { text: 'プロトタイプ設計', link: '/prototype-design' }] }],
+      '/production': [{ text: '仕様書 v0.4', items: [{ text: '共通・総目次', link: '/specification' }, { text: '本番系', link: '/production-specification' }, { text: 'プロトタイプ系', link: '/prototype-specification' }] }],
+      '/prototype': [{ text: 'プロトタイプ', items: [{ text: 'Google Cloud・Docker設計', link: '/prototype-design' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '追加ADR', link: '/prototype-decisions' }] }],
+      '/specification': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.4', link: '/specification' }, { text: '本番系仕様', link: '/production-specification' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '旧仕様（履歴）', link: '/specification-legacy' }, { text: 'ADR集・証拠基盤補足', link: '/adr' }] }],
+      '/adr': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.4', link: '/specification' }, { text: '本番系仕様', link: '/production-specification' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '旧仕様（履歴）', link: '/specification-legacy' }, { text: 'ADR集・証拠基盤補足', link: '/adr' }] }]
     },
     outline: { level: [2, 3], label: 'このページの内容' },
     docFooter: { prev: '前のページ', next: '次のページ' },

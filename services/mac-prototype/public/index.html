@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JPKI Wallet · ユーザPC実機ラボ</title><link rel="stylesheet" href="/app/style.css"><script defer src="/app/webauthn.js"></script><script defer src="/app/app.js"></script></head>
 <body><main>
-<header><div><span class="eyebrow">JPKI WALLET / LOCAL LAB</span><h1>ユーザPCで、確かめる。</h1><p>カードの接続と、パスキーの登録・認証を一つずつ試します。</p></div><span class="pill">ユーザPC内で実行 · PFは模倣</span></header>
+<header><div><span class="eyebrow">JPKI WALLET / LOCAL LAB</span><h1>ユーザPCで、確かめる。</h1><p>実カードは使わず、パスキーと本人確認の模倣を試します。</p></div><span class="pill">ユーザPC内で実行 · PFは模倣</span></header>
 <div class="notice">ここは実機検証用です。カード署名・パスキー認証・PFの模倣結果を分けて表示します。実際の本人確認・権利証明・法的な推定効の確認を行うものではありません。</div>
 <div id="global" role="status" aria-live="polite"></div>
 <section class="environment"><h2>実行環境</h2><dl><div><dt>接続先</dt><dd id="origin">確認中</dd></div><div><dt>WebAuthn</dt><dd id="webauthn">確認中</dd></div><div><dt>ユーザPC内の認証器</dt><dd id="platform">確認中</dd></div></dl><p class="sub">SafariまたはChromeで開いてください。localhost以外や埋込みブラウザでは、パスキー機能を使えない場合があります。</p></section>
@@ -15,7 +15,7 @@
 <p class="sub">生体情報は取得しません。認証成功時は公開鍵署名と利用者検証（UV）を確認します。UVだけでは指紋かMacのパスワードかを判別できません。同期パスキーが別端末に存在する場合もあります。</p>
 <details><summary>試験用の登録を削除する</summary><p class="sub">直前に認証したパスキーの公開鍵登録をこのアプリから削除します。macOSの「パスワード」に保存されたパスキー自体は残るので、必要ならご自身で削除してください。</p><button class="quiet" id="delete" disabled>認証した登録を削除</button></details>
 </section>
-<section class="panel"><span class="step">02 / CARD READER</span><h2>カードリーダーを確認</h2><p>リーダーをユーザPCへ接続し、マイナンバーカードをセットしてください。PC/SCの接続状態を確認します。</p><div class="status" id="card-status">未確認</div><ul id="readers"></ul><button id="probe" class="secondary">接続状態を確認</button><p class="sub" id="jpki"></p>
+<section class="panel" hidden><span class="step">02 / CARD READER</span><h2>カードリーダーを確認</h2><p>リーダーをユーザPCへ接続し、マイナンバーカードをセットしてください。PC/SCの接続状態を確認します。</p><div class="status" id="card-status">未確認</div><ul id="readers"></ul><button id="probe" class="secondary">接続状態を確認</button><p class="sub" id="jpki"></p>
 <details><summary>カード内の鍵でローカル署名を試す</summary><p>パスキー認証後に実行できます。JPKI署名用暗証番号はMacの専用ダイアログで入力します。Webページやチャットには入力しないでください。</p><label class="consent"><input id="consent" type="checkbox"> 契約・権利移転ではない、ユーザPC内だけの署名試験に同意します。</label><button id="sign" disabled>ローカル署名試験を開始</button><div id="sign-result" class="status" role="status"></div><p class="sub">公開仕様に基づく試験実装です。実カードでの成功はまだ未確認です。暗証番号を誤ると試行回数が減るため自動再試行しません。証明書・署名原本はネイティブ処理内だけで扱い、ブラウザへ返しません。</p></details>
 </section>
 </div>

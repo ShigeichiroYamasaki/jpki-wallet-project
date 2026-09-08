@@ -28,7 +28,7 @@ for(const cloud of [false,true,"pages"])test((cloud?'Cloud: ':'Local: ')+'HTTP +
   const split=cloud==='pages';const port=split?19389:cloud?19388:19387,origin=split?'https://shigeichiroyamasaki.github.io':cloud?'https://wallet.example.test':`http://localhost:${port}`;const apiOrigin='https://api.example.test';
   async function fetch(url,options={}){return new Promise((resolve,reject)=>{const req=request(`http://127.0.0.1:${port}${new URL(url).pathname}`,{method:options.method||'GET',headers:{Host:new URL(split?apiOrigin:origin).host,...(split?{Origin:origin}:{}),...options.headers}},res=>{let body='';res.on('data',c=>body+=c);res.on('end',()=>resolve({status:res.statusCode,headers:{get:key=>Array.isArray(res.headers[key])?res.headers[key][0]:res.headers[key]},json:async()=>JSON.parse(body)}))});req.on('error',reject);req.end(options.body)})}
 let clock=Date.now(),signCalls=0
-  const {server}=await createApp({port,cloudOrigin:cloud?origin:undefined,apiOrigin:split?apiOrigin:undefined,appPath:split?'/jpki-wallet-project/prototype/':'/app/',dataDir:dir,now:()=>clock,card:async(operation)=>{
+  const {server}=await createApp({enableRealCard:!cloud,port,cloudOrigin:cloud?origin:undefined,apiOrigin:split?apiOrigin:undefined,appPath:split?'/jpki-wallet-project/prototype/':'/app/',dataDir:dir,now:()=>clock,card:async(operation)=>{
     if(operation==='sign'){signCalls++;return {code:'LOCAL_SIGNATURE_VERIFIED',signatureVerified:true,pin:'never-export',certificate:'never-export'}}
     return {code:'CARD_ABSENT',readers:[{name:'test-reader',cardPresent:false}],jpkiInstalled:true}
   }})

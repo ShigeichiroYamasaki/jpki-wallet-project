@@ -31,7 +31,7 @@ export async function nativeCard(operation, input) {
   })
 }
 
-export async function createApp({port=18080,dataDir=join(here,'.local'),card=nativeCard,now=Date.now,cloudOrigin,publicDir,apiOrigin,appPath="/app/"}={}) {
+export async function createApp({port=18080,dataDir=join(here,'.local'),card=nativeCard,now=Date.now,cloudOrigin,publicDir,apiOrigin,appPath="/app/",enableRealCard=false}={}) {
   const cloud=!!cloudOrigin
   const origin=cloudOrigin || `http://localhost:${port}`
   const site=new URL(origin)
@@ -170,7 +170,7 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
         const receipt={verified:true,userVerified:true,origin,rpID,verifiedAt:new Date(now()).toISOString(),credentialDeviceType:result.authenticationInfo.credentialDeviceType,biometricMethod:'not_disclosed',signatureVerified:true}
         session.lastAuthentication=receipt;event('passkey_authentication','verified');send(200,receipt);return
       }
-      if(cloud && path.startsWith('/api/card/'))throw new Failure('LOCAL_CARD_UNAVAILABLE',404)
+      if((cloud||!enableRealCard) && path.startsWith('/api/card/'))throw new Failure('LOCAL_CARD_UNAVAILABLE',404)
       if(path==='/api/card/probe') {
         empty();if(nativeBusy)throw new Failure('CARD_BUSY',409)
         nativeBusy=true

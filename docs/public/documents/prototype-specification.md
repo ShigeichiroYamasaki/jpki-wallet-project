@@ -206,3 +206,7 @@ API処理のみp95 500 ms以内を初期測定目標とし、端末操作・ト�
 ## 11. 接続方式の参照資料
 
 [Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)は拡張とローカルプロセスの通信方式、[W3C Secure Contexts](https://www.w3.org/TR/secure-contexts/#is-origin-trustworthy)はlocalhostの開発環境を検討する根拠です。いずれもJPKI連携やユーザPCでの動作を保証するものではありません。
+
+## 参加者向けカード体験の更新（2026-09-08）
+
+参加者向けプロトタイプでは実マイナンバーカードを使わない。上記の実カード連携部分は過去の技術検証として扱い、現在の体験は[仮想カード方式](https://shigeichiroyamasaki.github.io/jpki-wallet-project/cloud-prototype.html#仮想カードによる体験現在の方針)に置き換える。カードのセット・読み取りはブラウザ内の状態遷移で模倣する。APIが未接続の場合、カードの操作体験のみ可能であり、本人確認・PF検証・鍵束縛の完了とは扱わない。

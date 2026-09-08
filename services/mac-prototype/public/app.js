@@ -71,7 +71,7 @@ async function init(){
  capabilityChecked=true
  controls()
  $('platform').textContent=platform?'利用者検証付き認証器が利用可能':'未検出・設定確認が必要'
- await refresh();status('passkey-status',state.credentialCount?'登録済みパスキーで認証できます。':'最初にパスキーを登録してください。');await probe()
+ await refresh();status('passkey-status',state.credentialCount?'登録済みパスキーで認証できます。':'最初にパスキーを登録してください。');controls()
 }
 function saveJSON(data,name){saveText(JSON.stringify(data,null,2),name,'application/json')}
 function saveText(data,name,type='text/plain'){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}

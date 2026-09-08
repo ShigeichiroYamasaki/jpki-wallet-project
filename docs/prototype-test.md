@@ -20,7 +20,7 @@ iPhoneではカメラで下のQRコードを読み取り、**Safariで開いて�
 
 <a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self" aria-label="モバイル版プロトタイプを開く"><img src="/images/prototype-mobile-qr.svg" alt="モバイル版プロトタイプのURLを読み取るQRコード" width="280" height="280" style="display:block;max-width:100%;height:auto;background:white" /></a>
 
-QRコードの接続先：<a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self">https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/</a>
+QRコードの接続先：<a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self">モバイル版テストのURLを開く</a>
 
 モバイル版とPC版は同じURLです。QRコードには個人情報やログイン情報を含めていません。
 

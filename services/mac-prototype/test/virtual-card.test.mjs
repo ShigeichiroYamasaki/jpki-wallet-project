@@ -13,7 +13,7 @@ test('virtual card works without API and cannot enable identity or wallet',async
  assert.equal(get('card-place').disabled,false)
  assert.equal(get('card-read').disabled,true)
  get('card-place').onclick();assert.equal(get('card-read').disabled,false)
- get('card-read').onclick();assert.match(get('card-progress').textContent,/仮想読み取り完了/)
+ await get('card-read').onclick();assert.match(get('card-progress').textContent,/仮想読み取り完了/)
  assert.equal(get('identity').disabled,true);assert.equal(get('wallet').disabled,true)
  assert.equal(requests,1)
 })

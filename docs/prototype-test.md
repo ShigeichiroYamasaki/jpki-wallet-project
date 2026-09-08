@@ -13,13 +13,14 @@ description: 仮想カード・パスキー・ウォレット署名を体験す�
 
 ## テストを開く {#join}
 
-**[プロトタイプテストを開く →](/prototype/index.html)**
+<!-- 独立したHTMLアプリはVitePressのルーターを経由せず、ページ全体を読み込む。 -->
+<strong><a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self">プロトタイプテストを開く →</a></strong>
 
 iPhoneではカメラで下のQRコードを読み取り、**Safariで開いてください**。このページをiPhoneで見ている場合は、上のリンクから開けます。
 
-<a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" aria-label="モバイル版プロトタイプを開く"><img src="/images/prototype-mobile-qr.svg" alt="モバイル版プロトタイプのURLを読み取るQRコード" width="280" height="280" style="display:block;max-width:100%;height:auto;background:white" /></a>
+<a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self" aria-label="モバイル版プロトタイプを開く"><img src="/images/prototype-mobile-qr.svg" alt="モバイル版プロトタイプのURLを読み取るQRコード" width="280" height="280" style="display:block;max-width:100%;height:auto;background:white" /></a>
 
-QRコードの接続先：[https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/](https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/)
+QRコードの接続先：<a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self">https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/</a>
 
 モバイル版とPC版は同じURLです。QRコードには個人情報やログイン情報を含めていません。
 

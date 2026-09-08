@@ -7,7 +7,7 @@
 ## 公開先
 
 - トップページ：<https://shigeichiroyamasaki.github.io/jpki-wallet-project/>
-- 利用画面：[プロトタイプを開く](/prototype/index.html)
+- 利用画面：<a href="https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/" target="_self">プロトタイプを開く</a>
 - パスキーのRP ID：`shigeichiroyamasaki.github.io`
 - WebAuthnの検証対象Origin：`https://shigeichiroyamasaki.github.io`
 - API：`https://jw-wallet-api-470192014938.us-west1.run.app`。GitHub Pagesは静的配信のためAPIを実行できません。

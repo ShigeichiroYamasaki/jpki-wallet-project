@@ -10,3 +10,5 @@
 !services/cloud-prototype/server.mjs
 !services/cloud-prototype/public
 !services/cloud-prototype/public/**
+!services/cloud-prototype/durable.mjs
+!services/cloud-prototype/run.mjs

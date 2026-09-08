@@ -10,7 +10,7 @@
 PUBLIC_HOST=利用するホスト名 docker compose -f infra/docker/compose.cloud.yml up -d --build
 ```
 
-画面は https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/ に配置。cacanet.orgは使用しない。上のComposeのPUBLIC_HOSTはAPI側のHTTPSホスト名であり、GitHub Pagesのホスト名を指定してはいけない。API側のTLS到達性を確保する構成例として保持する。公開APIのエンドポイントは未配置。公開IPv4を割り当てない方針は継続し、接続経路を別途確定する。
+画面は https://shigeichiroyamasaki.github.io/jpki-wallet-project/prototype/ に配置。cacanet.orgは使用しない。上のComposeのPUBLIC_HOSTはAPI側のHTTPSホスト名であり、GitHub Pagesのホスト名を指定してはいけない。API側のTLS到達性を確保する構成例として保持する。公開APIは https://jw-wallet-api-470192014938.us-west1.run.app 。Cloud Run版は infra/cloud-run/README.md を参照。公開IPv4を割り当てない方針は継続し、接続経路を別途確定する。
 
 既存Google Cloudプロジェクトは sy-creator-first-demo-20260820。以前の共有VMは負荷のため試験停止しているので、このComposeを既存サービスへそのまま追加しない。容量・ネットワーク・公開経路を確認して配置先を決める。無料枠内であることを保証する構成ではない。
 
@@ -47,6 +47,6 @@ docker build -f services/cloud-prototype/Dockerfile -t jw-cloud-prototype:local 
 
 統合テストはローカル／HTTPS公開オリジン設定の両方で暗号署名を検証する。HTTPSオリジンのテストはHTTPテスト接続にHost/Originを与える方式で、実TLS・実端末での成功を意味しない。
 
-GitHub PagesのRP IDは同じアカウントの他Pagesサイトと共有される。公開するスクリプトも同じ信頼境界として管理する。Cloud Run採用時はSQLite永続化とセッション管理の再設計が必要であり、このコンテナをそのまま一時ストレージへ配置しない。
+GitHub PagesのRP IDは同じアカウントの他Pagesサイトと共有される。公開するスクリプトも同じ信頼境界として管理する。Cloud Run版ではリクエストごとの状態を非公開Cloud Storageへ条件付き保存する。通常のserver.mjsではなくrun.mjsを起動する。
 
 参加者向けUIは仮想カードをセット・読み取りする方式。カード操作はAPI未接続でも体験可能だが、APIでの模倣結果の受理とは区別して表示する。実カード・PIN・NFC・カメラは使用しない。

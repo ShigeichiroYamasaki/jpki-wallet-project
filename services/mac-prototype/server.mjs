@@ -31,7 +31,7 @@ export async function nativeCard(operation, input) {
   })
 }
 
-export async function createApp({port=18080,dataDir=join(here,'.local'),card=nativeCard,now=Date.now,cloudOrigin,publicDir,apiOrigin,appPath="/app/",enableRealCard=false}={}) {
+export async function createApp({port=18080,dataDir=join(here,'.local'),card=nativeCard,now=Date.now,cloudOrigin,publicDir,apiOrigin,appPath="/app/",enableRealCard=false,initialSessions=[]}={}) {
   const cloud=!!cloudOrigin
   const origin=cloudOrigin || `http://localhost:${port}`
   const site=new URL(origin)
@@ -54,7 +54,7 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
   db.exec('CREATE TABLE IF NOT EXISTS operations(id TEXT PRIMARY KEY,bundle TEXT NOT NULL,created_at TEXT NOT NULL)')
   const testIssuer=issuer(db)
   const userID=Buffer.from(db.prepare('SELECT value FROM settings WHERE key=?').get('userID').value,'base64url')
-  const sessions=new Map()
+  const sessions=new Map(initialSessions.filter(([,s])=>s.expires>now()))
   let nativeBusy=false
 
   if(!db.prepare('PRAGMA table_info(credentials)').all().some(c=>c.name==='owner'))db.exec("ALTER TABLE credentials ADD COLUMN owner TEXT NOT NULL DEFAULT 'local'")
@@ -67,11 +67,13 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
     return pending
   }
   const assertAuth=session=>{if(!session.authAt || now()-session.authAt>300000)throw new Failure('PASSKEY_AUTH_REQUIRED',401)}
-  const cleanup=setInterval(()=>{
+  const prune=()=>{
     for(const [id,s] of sessions)if(s.expires<=now())sessions.delete(id)
     db.prepare('DELETE FROM events WHERE created_at < ?').run(new Date(now()-30*86400000).toISOString())
     db.prepare('DELETE FROM operations WHERE created_at < ?').run(new Date(now()-30*86400000).toISOString())
-  },60000).unref()
+  }
+  prune()
+  const cleanup=setInterval(prune,60000).unref()
   const server=createServer(async(req,res)=>{
     res.setHeader('Cache-Control','no-store')
     res.setHeader('X-Content-Type-Options','nosniff')
@@ -276,7 +278,7 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
   })
   server.requestTimeout=150000;server.headersTimeout=10000
   server.on('close',()=>{clearInterval(cleanup);db.close()})
-  return {server,origin}
+  return {server,origin,sessionSnapshot:()=>Array.from(sessions)}
 }
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
   const {server,origin}=await createApp()

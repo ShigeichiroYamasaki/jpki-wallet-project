@@ -62,7 +62,7 @@ const steps = [
         <a :href="withBase('/production-specification.html')">本番系仕様 →</a>
         <a :href="withBase('/prototype-specification.html')">プロトタイプ系詳細仕様・構成図 →</a>
         <a :href="withBase('/prototype-design.html')">Google Cloud・Docker 配置設計 →</a>
-        <a :href="withBase('/prototype/index.html')">プロトタイプ利用画面（API準備中） →</a>
+        <a :href="withBase('/prototype/index.html')">プロトタイプを試す →</a>
         <a :href="withBase('/mac-prototype.html')">Mac実機プロトタイプの起動方法 →</a>
         <span>GitHubで原文・変更履歴を確認</span>
         <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/specification.md">仕様書 v0.4 ↗</a>

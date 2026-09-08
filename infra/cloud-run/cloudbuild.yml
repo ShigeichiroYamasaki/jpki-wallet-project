@@ -1,0 +1,6 @@
+steps:
+- name: gcr.io/cloud-builders/docker
+  args: ['build', '-f', 'services/cloud-prototype/Dockerfile', '-t', 'us-west1-docker.pkg.dev/sy-creator-first-demo-20260820/jw-prototype/api:initial', '.']
+images: ['us-west1-docker.pkg.dev/sy-creator-first-demo-20260820/jw-prototype/api:initial']
+options:
+  logging: CLOUD_LOGGING_ONLY

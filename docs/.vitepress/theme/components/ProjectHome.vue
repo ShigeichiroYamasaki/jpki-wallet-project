@@ -17,7 +17,7 @@ const steps = [
           <p class="hero-description">本人確認とウォレットをつなぐ。<br>クリエイターと利用者が、ともに意思決定するための<br class="desktop-break">Web3認証基盤をつくります。</p>
           <div class="hero-actions">
             <a class="button primary" :href="withBase('/whitepaper.html')">ホワイトペーパーを読む <span aria-hidden="true">↗</span></a>
-            <a class="button secondary" :href="withBase('/specification.html')">仕様書を読む <span aria-hidden="true">→</span></a>
+            <a class="button secondary" :href="withBase('/prototype-test.html')">テストの説明・参加方法 <span aria-hidden="true">→</span></a>
           </div>
           <p class="hero-note">100人規模のプロトタイプを計画 · 現在はPF模倣実装・検証段階</p>
         </div>
@@ -57,17 +57,17 @@ const steps = [
       <div class="privacy-list"><article><span>01</span><div><h3>基本4情報は永続化しない</h3><p>氏名・住所・生年月日・性別、JPKI証明書・署名値をDBやログに保存しない方針です。</p></div></article><article><span>02</span><div><h3>オンチェーンに本人確認の生データを置かない</h3><p>設計ではハッシュとウォレットアドレスの対応を記録します。公開された情報の関連性や、消去できない履歴も考慮します。</p></div></article><article><span>03</span><div><h3>より少ない開示で参加できる未来へ</h3><p>ゼロ知識証明による認証・属性・行動履歴の保護をロードマップに含めています。実装方式は未確定です。</p></div></article></div>
     </section>
 
-    <section id="documents" class="documents-section"><div class="section-heading"><div><p class="section-label">04 / OPEN DESIGN</p><h2>設計を読み、議論を進める。</h2></div><span class="review-badge">PF模倣実装・検証段階</span></div><div class="document-grid"><a class="document-link" :href="withBase('/whitepaper.html')"><span class="document-meta">WHITE PAPER / v0.2</span><h3>プロジェクト・ホワイトペーパー <span aria-hidden="true">↗</span></h3><p>NPOの役割、認証の設計、プライバシー、実験計画を一冊に。</p><span class="document-foot">公開検討稿 · 2026年9月7日</span></a><a class="document-link" :href="withBase('/specification.html')"><span class="document-meta">SPECIFICATION / v0.4</span><h3>鍵束縛プロトコル仕様書 <span aria-hidden="true">↗</span></h3><p>全体構成からセッション管理、異常系、情報の取扱いまで。</p><span class="document-foot">本番系・プロトタイプ系を分離</span></a><a class="document-link" :href="withBase('/adr.html')"><span class="document-meta">ARCHITECTURE DECISION RECORDS</span><h3>技術的な選択と、その理由 <span aria-hidden="true">↗</span></h3><p>採用した方針、検討した代替案、今後の検証課題を記録。</p><span class="document-foot">ADR-001〜013・020・021 · 決定と追加方針</span></a></div>
+    <section id="documents" class="documents-section"><div class="section-heading"><div><p class="section-label">04 / OPEN DESIGN</p><h2>設計を読み、議論を進める。</h2></div><span class="review-badge">PF模倣実装・検証段階</span></div><div class="document-grid"><a class="document-link" :href="withBase('/whitepaper.html')"><span class="document-meta">WHITE PAPER / v0.4</span><h3>プロジェクト・ホワイトペーパー <span aria-hidden="true">↗</span></h3><p>本番サービスの意義、JPYCとの役割分担、認証・権限・運用の設計。</p><span class="document-foot">本番サービスの公開検討稿 · 2026年9月8日</span></a><a class="document-link" :href="withBase('/specification.html')"><span class="document-meta">SPECIFICATION / v0.4</span><h3>鍵束縛プロトコル仕様書 <span aria-hidden="true">↗</span></h3><p>全体構成からセッション管理、異常系、情報の取扱いまで。</p><span class="document-foot">本番系・プロトタイプ系を分離</span></a><a class="document-link" :href="withBase('/adr.html')"><span class="document-meta">ARCHITECTURE DECISION RECORDS</span><h3>技術的な選択と、その理由 <span aria-hidden="true">↗</span></h3><p>採用した方針、検討した代替案、今後の検証課題を記録。</p><span class="document-foot">ADR-001〜013・020・021 · 決定と追加方針</span></a></div>
       <div class="source-links" aria-label="GitHub上の設計資料">
         <a :href="withBase('/production-specification.html')">本番系仕様 →</a>
         <a :href="withBase('/prototype-specification.html')">プロトタイプ系詳細仕様・構成図 →</a>
         <a :href="withBase('/prototype-design.html')">Google Cloud・Docker 配置設計 →</a>
-        <a :href="withBase('/prototype/index.html')">プロトタイプを試す →</a>
-        <a :href="withBase('/mac-prototype.html')">Mac実機プロトタイプの起動方法 →</a>
+        <a :href="withBase('/prototype-test.html')">プロトタイプテストの説明・参加方法（モバイルQR） →</a>
+
         <span>GitHubで原文・変更履歴を確認</span>
         <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/specification.md">仕様書 v0.4 ↗</a>
         <a href="https://github.com/ShigeichiroYamasaki/jpki-wallet-project/blob/main/docs/public/documents/adr.md">ADR集・証拠基盤補足 ↗</a>
       </div>
-      <p class="scope-note">PF・証明書確認の模倣と基盤スケルトンに加え、Mac用のパスキー・カード連携・ウォレット模擬操作を実装しました。実Touch ID・実カードの成功は未確認です。クラウドは試験起動後、応答遅延のためプロトタイプを停止中です。認証サービスの提供開始、参加者募集、実機での一連の動作検証の完了を示すものではありません。</p></section>
+      <p class="scope-note">現在の公開テストでは仮想カード・パスキー・ウォレット署名を体験できます。実際のマイナンバーカード、決済、権利移転は扱いません。準備するもの、操作手順、モバイル版へのQRコードは参加案内にまとめています。</p></section>
   </div>
 </template>

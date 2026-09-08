@@ -13,16 +13,17 @@ export default defineConfig({
     siteTitle: 'JPKI Wallet Project',
     nav: [
       { text: 'ホワイトペーパー', link: '/whitepaper' },
+      { text: 'テストに参加', link: '/prototype-test' },
       { text: '認証のしくみ', link: '/#protocol' },
       { text: '仕様書 v0.4', link: '/specification' },
       { text: 'ADR', link: '/adr' },
       { text: 'プロトタイプ設計', link: '/prototype-design' }
     ],
     sidebar: {
-      '/whitepaper': [{ text: 'プロジェクト資料', items: [{ text: 'ホワイトペーパー v0.2', link: '/whitepaper' }, { text: '仕様書 v0.4', link: '/specification' }, { text: 'ADR', link: '/adr' }, { text: 'プロトタイプ設計', link: '/prototype-design' }] }],
+      '/whitepaper': [{ text: 'プロジェクト資料', items: [{ text: 'ホワイトペーパー v0.4', link: '/whitepaper' }, { text: '仕様書 v0.4', link: '/specification' }, { text: 'ADR', link: '/adr' }, { text: 'プロトタイプ設計', link: '/prototype-design' }] }],
       '/production': [{ text: '仕様書 v0.4', items: [{ text: '共通・総目次', link: '/specification' }, { text: '本番系', link: '/production-specification' }, { text: 'プロトタイプ系', link: '/prototype-specification' }] }],
       '/mac-prototype': [{ text: 'Mac実機試験', items: [{ text: '起動・使い方', link: '/mac-prototype' }, { text: '詳細仕様', link: '/prototype-specification' }, { text: '追加ADR', link: '/prototype-decisions' }] }],
-      '/prototype': [{ text: 'プロトタイプ', items: [{ text: 'Google Cloud・Docker設計', link: '/prototype-design' }, { text: 'Mac実機プロトタイプ', link: '/mac-prototype' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '追加ADR', link: '/prototype-decisions' }] }],
+      '/prototype': [{ text: 'プロトタイプ', items: [{ text: 'テストの説明・参加方法', link: '/prototype-test' }, { text: 'Google Cloud・Docker設計', link: '/prototype-design' }, { text: 'Mac実機プロトタイプ', link: '/mac-prototype' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '追加ADR', link: '/prototype-decisions' }] }],
       '/specification': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.4', link: '/specification' }, { text: '本番系仕様', link: '/production-specification' }, { text: 'Mac実機プロトタイプ', link: '/mac-prototype' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '旧仕様（履歴）', link: '/specification-legacy' }, { text: 'ADR集・証拠基盤補足', link: '/adr' }] }],
       '/adr': [{ text: '設計ドキュメント', items: [{ text: '仕様書 v0.4', link: '/specification' }, { text: '本番系仕様', link: '/production-specification' }, { text: 'Mac実機プロトタイプ', link: '/mac-prototype' }, { text: 'プロトタイプ系詳細仕様', link: '/prototype-specification' }, { text: '旧仕様（履歴）', link: '/specification-legacy' }, { text: 'ADR集・証拠基盤補足', link: '/adr' }] }]
     },

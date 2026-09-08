@@ -13,13 +13,13 @@
 
 ## 1. 範囲とモード
 
-利用者端末はこのMac。ICカードリーダーをUSB等で接続し、ブラウザからローカル連携ソフトを経由して使用する。スマホNFC／モバイルWebViewは今回の必須構成に含めない。
+利用者が操作する端末を「ユーザPC」と呼ぶ。現行プロトタイプの対応OSはmacOSとする。ICカードリーダーをUSB等で接続し、ブラウザからローカル連携ソフトを経由して使用する。スマホNFC／モバイルWebViewは今回の必須構成に含めない。
 
 | モード | 入力と処理 | 出力・限界 |
 | --- | --- | --- |
 | P0サーバー試験（実装済み） | scenario、合成人物、合成intentHashをPF模倣APIへ送る | 模倣結果のみ。実署名の検証はしない |
 | P1ブラウザ統合（追加設計） | 試験用パスキー・EOAの実署名＋PF合成fixture | 暗号学的署名は試験するが、人物は合成ID |
-| P2カード接続（追加設計・要検証） | このMac上だけで実カード接続・明示同意によるテスト署名を試す | 状態・試験合否のみ表示。証明書・署名・その派生hashをサーバーに送らない |
+| P2カード接続（追加設計・要検証） | ユーザPC上だけで実カード接続・明示同意によるテスト署名を試す | 状態・試験合否のみ表示。証明書・署名・その派生hashをサーバーに送らない |
 | P2証拠検証（追加設計） | 合成VCとP1署名から証拠を作成・独立検証 | simulation-only。実カード試験の証拠とは結合しない |
 | P3参加実験（後工程） | 合成人物による段階的10→30→100人試験 | 専用アクセス方式・負荷対策を別途合意 |
 
@@ -33,7 +33,7 @@
 
 | 配置 | 実装済み | 追加設計 |
 | --- | --- | --- |
-| このMac | 接続試験は未実施 | ブラウザUI、カードブリッジ、試験用パスキー・ウォレット、証拠検証ツール |
+| ユーザPC | 接続試験は未実施 | ブラウザUI、カードブリッジ、試験用パスキー・ウォレット、証拠検証ツール |
 | Caddy | 全パスをapi:3000へ転送 | `/app/` にブラウザUIの静的成果物を配信 |
 | API | Node標準HTTP、PF模倣、health/readiness | セッション、署名検証、認可、VC、証拠エクスポート |
 | PostgreSQL | `runtime_probe` のみ | セッション、credentials、binding、操作、outbox、VC状態、証拠索引 |
@@ -83,7 +83,7 @@ PINは信頼するローカルのカード連携UIで入力し、Webページ・
 
 `READER_NOT_FOUND`、`CARD_ABSENT`、`USER_CANCELLED`、`PIN_REJECTED`、`CARD_LOCKED`、`UNSUPPORTED_ENVIRONMENT`、`TIMEOUT`、`LOCAL_VERIFICATION_FAILED` を分ける。生のSDK例外や証明書情報は表示・転送しない。中断後の再試験は新しいrequestId/challengeで開始する。
 
-このMacのCPU種別・macOS版、ブラウザ版、リーダー型番・ドライバ、JPKIソフト/API版、PIN入力経路、署名方式は未確認。対応表に実測結果を記録するまで「このMacで動作確認済み」としない。[JPKI公式Mac案内](https://www.jpki.go.jp/download/mac.html)は対応確認の出発点であり、本システムの動作保証ではない。
+ユーザPCごとにCPU種別・macOS版、ブラウザ版、リーダー型番・ドライバ、JPKIソフト/API版、PIN入力経路、署名方式を確認する。対応表に実測結果を記録するまで「ユーザPCで動作確認済み」としない。[JPKI公式Mac案内](https://www.jpki.go.jp/download/mac.html)は対応確認の出発点であり、本システムの動作保証ではない。
 
 ## 5. P0の実装済みHTTP契約
 
@@ -205,4 +205,4 @@ API処理のみp95 500 ms以内を初期測定目標とし、端末操作・ト�
 
 ## 11. 接続方式の参照資料
 
-[Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)は拡張とローカルプロセスの通信方式、[W3C Secure Contexts](https://www.w3.org/TR/secure-contexts/#is-origin-trustworthy)はlocalhostの開発環境を検討する根拠です。いずれもJPKI連携やこのMacでの動作を保証するものではありません。
+[Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)は拡張とローカルプロセスの通信方式、[W3C Secure Contexts](https://www.w3.org/TR/secure-contexts/#is-origin-trustworthy)はlocalhostの開発環境を検討する根拠です。いずれもJPKI連携やユーザPCでの動作を保証するものではありません。

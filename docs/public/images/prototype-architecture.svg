@@ -6,7 +6,7 @@
 <text x="30" y="42" class="title">プロトタイプ構成：Macブラウザ × PF模倣</text>
 <text x="30" y="72" class="small">v0.4 / 2026-09-07　実線枠＝P0実装　破線枠＝追加設計・要検証</text>
 <rect x="25" y="95" width="1070" height="475" rx="18" fill="#edf4ff" stroke="#9ab8dc"/>
-<text x="45" y="128" class="label">このMac：カードの実データは端末内で処理</text>
+<text x="45" y="128" class="label">ユーザPC（macOS）：カードの実データは端末内で処理</text>
 <rect x="45" y="150" width="280" height="105" rx="12" fill="#fff" stroke="#94a3b8" stroke-dasharray="6 4"/>
 <text x="61" y="179" class="label">マイナンバーカード／リーダー</text>
 <text x="61" y="204" class="small">カード秘密鍵はカード内</text>

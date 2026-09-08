@@ -30,10 +30,10 @@ PUBLIC_HOST=利用するホスト名 docker compose -f infra/docker/compose.clou
 
 ## 利用者の操作
 
-1. ウォレット拡張のある通常ブラウザでサイトを開く。
+1. iPhoneはSafari、PCはウォレット拡張のある通常ブラウザでサイトを開く。
 2. 初回登録後「パスキーでログイン」。localhost用パスキーは使えないため新規登録。
 3. 「模倣で次へ進む」。合成人物person-aを使う。実人物の識別ではなく全員共通の試験fixture。
-4. ウォレットを接続しSIWE署名。拡張が提供するwindow.ethereumを使用。モバイルウォレット接続、複数拡張の選択は未対応。
+4. ウォレットへ接続した後、別ボタンでSIWE署名。window.ethereumがない場合はMetaMask Connect EVM 2.1.1を使用してアプリへ接続する。複数拡張の選択は未対応。
 5. 任意で合成作品の操作内容を確認し、パスキーとウォレット双方で署名。証拠を保存。
 
 カードリーダー・PIN入力・実カード署名はクラウド版に含まない。通常起動では実カードAPIを無効化する。過去の実カード検証実装は履歴として保持する。スマホ本人確認は連携先選定後の別実装であり、模倣を実本人確認と表示しない。
@@ -50,3 +50,5 @@ docker build -f services/cloud-prototype/Dockerfile -t jw-cloud-prototype:local 
 GitHub PagesのRP IDは同じアカウントの他Pagesサイトと共有される。公開するスクリプトも同じ信頼境界として管理する。Cloud Run版ではリクエストごとの状態を非公開Cloud Storageへ条件付き保存する。通常のserver.mjsではなくrun.mjsを起動する。
 
 参加者向けUIは仮想カードをセット・読み取りする方式。カード操作はAPI未接続でも体験可能だが、APIでの模倣結果の受理とは区別して表示する。実カード・PIN・NFC・カメラは使用しない。
+
+モバイル用SDKはscripts/build-pages-prototype.mjsでPagesにバンドルする。メモリ内の認証セッションはSDKへ渡さない。APIセッショントークンはMetaMask中継へ送らない。署名対象のSIWE/EIP-712メッセージ（公開鍵束縛のハッシュを含む）はウォレットに渡る。SDKのanalyticsは無効。iPhone実機E2Eは確認待ち。

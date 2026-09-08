@@ -31,10 +31,12 @@ export async function verifyBundle(bundle,trustedKey){
   if(p.intent.action!=='approve-demo-license'||p.intent.workId!=='mock:demo-track-001'||p.intent.subject!==p.identity.mockSubjectId||p.intent.wallet!==p.wallet.address)return fail('INTENT_SCOPE_MISMATCH')
   if(!Number.isFinite(Date.parse(p.acceptedAt)) || Date.parse(p.acceptedAt)>p.intent.expiresAt*1000)return fail('EXPIRED_AT_ACCEPTANCE')
   if(digest(canonical(p.intent))!==p.intentHash || p.challenge!==Buffer.from('jw-operation-v1:'+p.intentHash+':'+p.intent.nonce).toString('base64url'))return fail('INTENT_HASH_MISMATCH')
-  if(!/^http:\/\/localhost:\d+$/.test(p.origin))return fail('INVALID_ORIGIN')
+  let site;try{site=new URL(p.origin)}catch{return fail('INVALID_ORIGIN')}
+  if(site.origin!==p.origin || (site.protocol!=='https:'&&!/^http:\/\/localhost:\d+$/.test(p.origin)))return fail('INVALID_ORIGIN')
   if(digest(canonical(p.wallet.binding))!==p.intent.bindingHash || p.wallet.bindingHash!==p.intent.bindingHash || p.wallet.binding.subject!==p.intent.subject || p.wallet.binding.credentialHash!==p.intent.credentialHash || p.wallet.binding.wallet!==p.wallet.address || p.wallet.binding.chainId!==p.intent.chainId)return fail('BINDING_MISMATCH')
+  if(p.wallet.binding.appURL&&new URL(p.wallet.binding.appURL).origin!==p.origin)return fail('BINDING_ORIGIN_MISMATCH')
   const siwe=parseSiweMessage(p.wallet.siweMessage)
-  if(siwe.address?.toLowerCase()!==p.wallet.address.toLowerCase() || siwe.chainId!==p.intent.chainId || siwe.domain!==new URL(p.origin).host || siwe.uri!==p.origin+'/app/' || siwe.nonce!==p.wallet.binding.nonce || !siwe.resources?.includes('urn:jw:binding:'+p.intent.bindingHash))return fail('SIWE_INTENT_MISMATCH')
+  if(siwe.address?.toLowerCase()!==p.wallet.address.toLowerCase() || siwe.chainId!==p.intent.chainId || siwe.domain!==new URL(p.origin).host || siwe.uri!==(p.wallet.binding.appURL||p.origin+'/app/') || siwe.nonce!==p.wallet.binding.nonce || !siwe.resources?.includes('urn:jw:binding:'+p.intent.bindingHash))return fail('SIWE_INTENT_MISMATCH')
   if(!Array.isArray(p.mockCredentials)||p.mockCredentials.length!==3)return fail('CREDENTIALS_MISSING')
   for(const credential of p.mockCredentials){
     if(credential.payload.scope!=='simulation-only' || credential.payload.subject!==p.intent.subject || !verify(null,Buffer.from(canonical(credential.payload)),trustedKey,Buffer.from(credential.signature,'base64url')))return fail('MOCK_CREDENTIAL_INVALID')
@@ -44,7 +46,7 @@ export async function verifyBundle(bundle,trustedKey){
   const pub=Buffer.from(p.passkey.publicKey,'base64url')
   if(p.identity.credentialHash!==digest(p.passkey.id) || p.intent.credentialHash!==digest(p.passkey.id))return fail('CREDENTIAL_MISMATCH')
   let auth
-  try{auth=await verifyAuthenticationResponse({response:p.passkey.assertion,expectedChallenge:p.challenge,expectedOrigin:p.origin,expectedRPID:'localhost',requireUserVerification:true,credential:{id:p.passkey.id,publicKey:pub,counter:p.passkey.previousCounter}})}catch{return fail('PASSKEY_SIGNATURE_INVALID')}
+  try{auth=await verifyAuthenticationResponse({response:p.passkey.assertion,expectedChallenge:p.challenge,expectedOrigin:p.origin,expectedRPID:site.hostname,requireUserVerification:true,credential:{id:p.passkey.id,publicKey:pub,counter:p.passkey.previousCounter}})}catch{return fail('PASSKEY_SIGNATURE_INVALID')}
   if(!auth.verified||!auth.authenticationInfo.userVerified)return fail('PASSKEY_UV_INVALID')
   try{
     if(!await verifyMessage({address:p.wallet.address,message:p.wallet.siweMessage,signature:p.wallet.siweSignature}))return fail('WALLET_BINDING_INVALID')

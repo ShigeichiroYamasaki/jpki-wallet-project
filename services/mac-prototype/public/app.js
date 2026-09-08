@@ -1,13 +1,23 @@
 const $=id=>document.getElementById(id)
-let state, supported=false, platform=false, busy=false, cardPresent=false, walletBound=false, mockAccepted=false, evidenceReady=false
+let state, supported=false, platform=false, capabilityChecked=false, busy=false, cardPresent=false, walletBound=false, mockAccepted=false, evidenceReady=false
 const messages={SESSION_EXPIRED:'セッションが期限切れです。ページを再読み込みしてください。',PASSKEY_AUTH_REQUIRED:'先にパスキーで認証してください。',NO_REGISTERED_PASSKEY:'先にパスキーを登録してください。',REGISTRATION_REJECTED:'登録応答を検証できませんでした。新しい登録操作からやり直してください。',AUTHENTICATION_REJECTED:'署名・利用者検証を確認できませんでした。新しい認証操作からやり直してください。',READER_NOT_FOUND:'リーダーが見つかりません。USB接続と対応ドライバを確認してください。',CARD_ABSENT:'リーダーは接続されています。カードをセットしてください。',CARD_PRESENT:'カードがセットされています。',PCSC_UNAVAILABLE:'macOSのスマートカードサービスに接続できません。リーダーを接続し、起動スクリプトをMacのターミナルから実行してください。',JPKI_NOT_INSTALLED:'JPKI利用者ソフトが見つかりません。',PIN_REJECTED:'暗証番号が一致しませんでした。自動再試行していません。番号をご確認ください。',PIN_FORMAT_INVALID:'署名用暗証番号は6〜16桁の英数字です。カードへの照合は行っていません。',CARD_LOCKED:'カードの暗証番号がロックされています。',USER_CANCELLED:'操作を取り消しました。',TIMEOUT:'処理が時間切れになりました。',LOCAL_SIGNATURE_VERIFIED:'カードの署名をローカルで検証しました。証明書の有効性・失効は未確認です。',LOCAL_HELPER_UNAVAILABLE:'ローカル処理を起動できません。初回セットアップを実行してください。',LOCAL_HELPER_FAILED:'カード連携処理を完了できませんでした。対応環境をご確認ください。',JPKI_API_FAILED:'JPKI APIが処理を完了できませんでした。ソフトの対応とカードの状態をご確認ください。',SELECT_ONE_CARD:'カードが入ったリーダーを1台にしてください。',UNSUPPORTED_KEY_TYPE:'このカードの鍵方式にはまだ対応していません。',SIGN_COOLDOWN:'連続実行を避けるため、30秒待ってから操作してください。'}
 function status(id,text,good=false){$(id).textContent=text;$(id).className='status'+(good?' good':'')}
 async function api(path,input={}){
  const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.csrf},body:JSON.stringify(input)})
  const result=await r.json();if(!r.ok)throw new Error(messages[result.code]||result.code);return result
 }
+function registrationHelp(){
+ if(!capabilityChecked)return 'ブラウザのパスキー対応を確認しています。'
+ if(!supported)return 'このブラウザではWebAuthnを利用できないため、登録できません。SafariまたはChromeのアドレス欄に http://localhost:18080/app/ を貼り付けて開いてください。'
+ if(!platform)return 'このブラウザで端末内の認証器を検出できないため、登録できません。Codex内で開いている場合はSafariまたはChromeで http://localhost:18080/app/ を開いてください。そこでも未検出の場合は、macOSのTouch ID設定とブラウザのパスキー設定を確認してください。'
+ if(!state)return 'サーバーとの接続が完了していません。エラー表示を確認し、ページを再読み込みしてください。'
+ if(state.credentialCount>0&&!state.authenticated)return '登録済みパスキーがあります。追加登録するには、先に「パスキーで認証」を押してください。'
+ return ''
+}
 function controls(){
- $('register').disabled=busy||!supported||!platform||(state?.credentialCount>0&&!state?.authenticated)
+ const help=registrationHelp();$('registration-help').textContent=help;$('registration-help').hidden=!help
+
+ $('register').disabled=busy||!state||!supported||!platform||(state?.credentialCount>0&&!state?.authenticated)
  $('authenticate').disabled=busy||!supported||!state?.credentialCount
  $('probe').disabled=busy||!state
  for(const id of ['mock','report','delete'])$(id).disabled=busy||!state?.authenticated
@@ -20,7 +30,7 @@ function controls(){
 async function perform(fn){if(busy)return;busy=true;controls();$('global').textContent='';try{await fn()}catch(e){$('global').textContent=(e.name==='NotAllowedError'||e.code==='ERROR_CEREMONY_ABORTED')?'操作が取り消されたか、時間切れです。Touch IDの画面を確認し、ボタンから再実行してください。':e.message}finally{busy=false;controls()}}
 async function refresh(){const r=await fetch('/api/bootstrap');if(!r.ok)throw new Error('アプリに接続できません。localhostで開いてください。');state=await r.json();$('origin').textContent=state.origin;controls()}
 $('register').onclick=()=>perform(async()=>{
- status('passkey-status','macOSのパスキー登録画面で、このMacのTouch IDを選んでください。')
+ status('passkey-status','macOSのパスキー登録画面で、ユーザPCのTouch IDを選んでください。')
  const options=await api('passkeys/register/options')
  const response=await SimpleWebAuthnBrowser.startRegistration({optionsJSON:options})
  const result=await api('passkeys/register/verify',response)
@@ -55,7 +65,11 @@ $('delete').onclick=()=>perform(async()=>{if(!confirm('直前に認証したパ�
 async function init(){
  supported=!!window.PublicKeyCredential&&window.isSecureContext
  $('webauthn').textContent=supported?'利用可能':'このブラウザでは利用不可'
- platform=supported&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(()=>false)
+ try{
+  platform=supported&&typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable==='function'&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+ }catch{platform=false}
+ capabilityChecked=true
+ controls()
  $('platform').textContent=platform?'利用者検証付き認証器が利用可能':'未検出・設定確認が必要'
  await refresh();status('passkey-status',state.credentialCount?'登録済みパスキーで認証できます。':'最初にパスキーを登録してください。');await probe()
 }
@@ -83,4 +97,4 @@ $('operation').onclick=()=>perform(async()=>{
 })
 $('evidence').onclick=()=>perform(async()=>{const result=await api('evidence/export');saveJSON(result.bundle,'jw-mock-evidence.json')})
 $('issuer').onclick=()=>perform(async()=>{const result=await api('evidence/export');saveText(result.trustedIssuerPublicKey,'jw-test-issuer.pem')})
-init().catch(e=>{$('global').textContent=e.message})
+init().catch(e=>{$('global').textContent=e.message;controls()})

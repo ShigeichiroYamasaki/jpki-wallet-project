@@ -31,7 +31,17 @@ export async function nativeCard(operation, input) {
   })
 }
 
-export async function createApp({port=18080,dataDir=join(here,'.local'),card=nativeCard,now=Date.now}={}) {
+export async function createApp({port=18080,dataDir=join(here,'.local'),card=nativeCard,now=Date.now,cloudOrigin,publicDir,apiOrigin,appPath="/app/"}={}) {
+  const cloud=!!cloudOrigin
+  const origin=cloudOrigin || `http://localhost:${port}`
+  const site=new URL(origin)
+  if(cloud && (site.protocol!=='https:' || site.origin!==origin || site.username || site.password))throw new Error('Cloud origin must be an exact HTTPS origin')
+  const apiSite=new URL(apiOrigin||origin)
+  const split=cloud&&apiSite.origin!==site.origin
+  if(apiOrigin&&(apiSite.protocol!=='https:'||apiSite.origin!==apiOrigin))throw new Error('API origin must be an exact HTTPS origin')
+  if(!appPath.startsWith('/')||new URL(appPath,origin).origin!==origin)throw new Error('Invalid application path')
+  const appURL=new URL(appPath,origin).href
+  const rpID=site.hostname
   process.umask(0o077)
   await mkdir(dataDir,{recursive:true,mode:0o700})
   await chmod(dataDir,0o700)
@@ -46,8 +56,9 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
   const userID=Buffer.from(db.prepare('SELECT value FROM settings WHERE key=?').get('userID').value,'base64url')
   const sessions=new Map()
   let nativeBusy=false
-  const origin=`http://localhost:${port}`
-  const rows=()=>db.prepare('SELECT * FROM credentials').all()
+
+  if(!db.prepare('PRAGMA table_info(credentials)').all().some(c=>c.name==='owner'))db.exec("ALTER TABLE credentials ADD COLUMN owner TEXT NOT NULL DEFAULT 'local'")
+  const rows=session=>cloud?db.prepare('SELECT * FROM credentials WHERE owner=?').all(session?.userID||''):db.prepare('SELECT * FROM credentials').all()
   const event=(kind,result)=>db.prepare('INSERT INTO events(kind,result,created_at) VALUES(?,?,?)').run(kind,result,new Date(now()).toISOString())
   const consume=(session,type)=>{
     const pending=session.pending;delete session.pending
@@ -69,26 +80,40 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
     res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
     const send=(status,data)=>{if(res.writableEnded)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data))}
     try {
-      if(req.headers.host!==`localhost:${port}`)throw new Failure('LOCALHOST_REQUIRED',403)
-      if(req.headers['sec-fetch-site'] && !['none','same-origin'].includes(req.headers['sec-fetch-site']))throw new Failure('CROSS_SITE_REJECTED',403)
+      if(req.headers.host!==apiSite.host)throw new Failure('LOCALHOST_REQUIRED',403)
+      if(split){
+        if(req.headers.origin!==origin)throw new Failure('ORIGIN_REJECTED',403)
+        res.setHeader('Access-Control-Allow-Origin',origin)
+        res.setHeader('Vary','Origin')
+        if(req.method==='OPTIONS'){
+          if(!['GET','POST'].includes(req.headers['access-control-request-method']))throw new Failure('METHOD_NOT_ALLOWED',405)
+          const requested=(req.headers['access-control-request-headers']||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean)
+          if(requested.some(h=>!['authorization','content-type','x-csrf-token'].includes(h)))throw new Failure('HEADERS_REJECTED',403)
+          res.setHeader('Access-Control-Allow-Methods','GET, POST')
+          res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, X-CSRF-Token')
+          res.writeHead(204);res.end();return
+        }
+      }
+      if(!split && req.headers['sec-fetch-site'] && !['none','same-origin'].includes(req.headers['sec-fetch-site']))throw new Failure('CROSS_SITE_REJECTED',403)
       const path=new URL(req.url,origin).pathname
       const assets={'/':'index.html','/app/':'index.html','/app/app.js':'app.js','/app/style.css':'style.css'}
       if(req.method==='GET' && (assets[path] || path==='/app/webauthn.js')) {
-        const file=path==='/app/webauthn.js'?join(here,'node_modules/@simplewebauthn/browser/dist/bundle/index.umd.min.js'):join(here,'public',assets[path])
+        const file=path==='/app/webauthn.js'?join(here,'node_modules/@simplewebauthn/browser/dist/bundle/index.umd.min.js'):join(publicDir||join(here,'public'),assets[path])
         const body=await readFile(file)
         res.writeHead(200,{'Content-Type':path.endsWith('.js')?'text/javascript; charset=utf-8':path.endsWith('.css')?'text/css; charset=utf-8':'text/html; charset=utf-8'});res.end(body);return
       }
-      if(path==='/healthz' && req.method==='GET'){send(200,{status:'alive',mode:'local-mac',provider:'mock'});return}
-      const cookie=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('jw_local='))?.slice(9)
+      if(path==='/healthz' && req.method==='GET'){send(200,{status:'alive',mode:cloud?'cloud-mock':'local-mac',provider:'mock'});return}
+      const cookie=split?(req.headers.authorization?.startsWith('Bearer ')?req.headers.authorization.slice(7):undefined):(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('jw_local='))?.slice(9)
       let session=cookie && sessions.get(hash(cookie))
       if(session?.expires<=now()){sessions.delete(hash(cookie));session=undefined}
       if(path==='/api/bootstrap' && req.method==='GET') {
         if(!session){
           if(sessions.size>=100)throw new Failure('TOO_MANY_SESSIONS',429)
-          const secret=token();session={csrf:token(),expires:now()+600000,authAt:0,count:0,window:now()};sessions.set(hash(secret),session)
-          res.setHeader('Set-Cookie',`jw_local=${secret}; HttpOnly; SameSite=Strict; Path=/; Max-Age=600`)
+          const secret=token();session={userID:cloud?token():'local',csrf:token(),expires:now()+600000,authAt:0,count:0,window:now()};sessions.set(hash(secret),session)
+          if(split)session.transportToken=secret
+          else res.setHeader('Set-Cookie',`jw_local=${secret};${cloud?' Secure;':''} HttpOnly; SameSite=Strict; Path=/; Max-Age=600`)
         }
-        send(200,{csrf:session.csrf,origin,rpID:'localhost',credentialCount:rows().length,authenticated:!!session.authAt && now()-session.authAt<300000,provider:'mock',mode:'local-mac',sessionExpiresAt:session.expires});return
+        send(200,{...(split?{sessionToken:session.transportToken}:{}),csrf:session.csrf,origin,rpID,credentialCount:rows(session).length,authenticated:!!session.authAt && now()-session.authAt<300000,provider:'mock',mode:cloud?'cloud-mock':'local-mac',sessionExpiresAt:session.expires});return
       }
       if(!path.startsWith('/api/'))throw new Failure('NOT_FOUND',404)
       if(!session)throw new Failure('SESSION_EXPIRED',401)
@@ -104,27 +129,29 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
       if(!input || typeof input!=='object' || Array.isArray(input))throw new Failure('INVALID_INPUT')
       const empty=()=>{if(Object.keys(input).length)throw new Failure('UNEXPECTED_FIELDS')}
       if(path==='/api/passkeys/register/options') {
-        empty();const creds=rows();if(creds.length){assertAuth(session)}
+        empty();const creds=rows(session);if(creds.length){assertAuth(session)}
         if(creds.length>=5)throw new Failure('CREDENTIAL_LIMIT',409)
-        const options=await generateRegistrationOptions({rpName:'JPKI Wallet Mac Prototype',rpID:'localhost',userName:'mac-local-test',userDisplayName:'このMacの試験用パスキー',userID,attestationType:'none',timeout:120000,supportedAlgorithmIDs:[-7],preferredAuthenticatorType:'localDevice',authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'required',userVerification:'required'},excludeCredentials:creds.map(c=>({id:c.id,transports:JSON.parse(c.transports)}))})
-        session.pending={type:'register',challenge:options.challenge,expires:now()+120000,initialCount:creds.length}
+        const options=await generateRegistrationOptions({rpName:cloud?'JPKI Wallet Prototype':'JPKI Wallet Mac Prototype',rpID,userName:cloud?'participant-'+session.userID.slice(0,8):'mac-local-test',userDisplayName:'ユーザPCの試験用パスキー',userID:cloud?Buffer.from(session.userID,'base64url'):userID,attestationType:'none',timeout:120000,supportedAlgorithmIDs:[-7],preferredAuthenticatorType:'localDevice',authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'required',userVerification:'required'},excludeCredentials:creds.map(c=>({id:c.id,transports:JSON.parse(c.transports)}))})
+        session.pending={userID:session.userID,type:'register',challenge:options.challenge,expires:now()+120000,initialCount:creds.length}
         send(200,options);return
       }
       if(path==='/api/passkeys/register/verify') {
         const pending=consume(session,'register')
-        if(rows().length)assertAuth(session)
+        if(rows(session).length)assertAuth(session)
         let result
-        try{result=await verifyRegistrationResponse({response:input,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:'localhost',requireUserVerification:true,supportedAlgorithmIDs:[-7]})}catch{throw new Failure('REGISTRATION_REJECTED',422)}
+        try{result=await verifyRegistrationResponse({response:input,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:rpID,requireUserVerification:true,supportedAlgorithmIDs:[-7]})}catch{throw new Failure('REGISTRATION_REJECTED',422)}
         if(!result.verified || !result.registrationInfo.userVerified)throw new Failure('REGISTRATION_REJECTED',422)
+        if(session.userID!==pending.userID)throw new Failure('SESSION_CHANGED',409)
+        if(rows(session).length)assertAuth(session)
         const c=result.registrationInfo.credential
-        db.prepare('INSERT INTO credentials VALUES(?,?,?,?,?,?,?)').run(c.id,Buffer.from(c.publicKey).toString('base64url'),c.counter,result.registrationInfo.credentialDeviceType,Number(result.registrationInfo.credentialBackedUp),JSON.stringify(c.transports||[]),new Date(now()).toISOString())
+        db.prepare('INSERT INTO credentials VALUES(?,?,?,?,?,?,?,?)').run(c.id,Buffer.from(c.publicKey).toString('base64url'),c.counter,result.registrationInfo.credentialDeviceType,Number(result.registrationInfo.credentialBackedUp),JSON.stringify(c.transports||[]),new Date(now()).toISOString(),cloud?session.userID:'local')
         event('passkey_registration','verified')
         // Registration is not counted as a successful subsequent authentication.
-        send(200,{verified:true,userVerified:true,credentialCount:rows().length,next:'authenticate',biometricMethod:'not_disclosed'});return
+        send(200,{verified:true,userVerified:true,credentialCount:rows(session).length,next:'authenticate',biometricMethod:'not_disclosed'});return
       }
       if(path==='/api/passkeys/auth/options') {
-        empty();if(!rows().length)throw new Failure('NO_REGISTERED_PASSKEY',409)
-        const options=await generateAuthenticationOptions({rpID:'localhost',timeout:120000,userVerification:'required',allowCredentials:rows().map(c=>({id:c.id,transports:JSON.parse(c.transports)}))})
+        empty();if(!cloud&&!rows(session).length)throw new Failure('NO_REGISTERED_PASSKEY',409)
+        const options=await generateAuthenticationOptions({rpID,timeout:120000,userVerification:'required',allowCredentials:cloud?[]:rows(session).map(c=>({id:c.id,transports:JSON.parse(c.transports)}))})
         options.hints=['client-device']
         session.pending={type:'auth',challenge:options.challenge,expires:now()+120000}
         send(200,options);return
@@ -133,15 +160,17 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
         const pending=consume(session,'auth')
         const c=typeof input.id==='string' && db.prepare('SELECT * FROM credentials WHERE id=?').get(input.id)
         if(!c)throw new Failure('UNKNOWN_CREDENTIAL',422)
-        if(input.response?.userHandle && !equal(input.response.userHandle,userID.toString('base64url')))throw new Failure('USER_HANDLE_REJECTED',422)
+        if(input.response?.userHandle && !equal(input.response.userHandle,cloud?c.owner:userID.toString('base64url')))throw new Failure('USER_HANDLE_REJECTED',422)
         let result
-        try{result=await verifyAuthenticationResponse({response:input,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:'localhost',requireUserVerification:true,credential:{id:c.id,publicKey:Buffer.from(c.public_key,'base64url'),counter:c.counter,transports:JSON.parse(c.transports)}})}catch{throw new Failure('AUTHENTICATION_REJECTED',422)}
+        try{result=await verifyAuthenticationResponse({response:input,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:rpID,requireUserVerification:true,credential:{id:c.id,publicKey:Buffer.from(c.public_key,'base64url'),counter:c.counter,transports:JSON.parse(c.transports)}})}catch{throw new Failure('AUTHENTICATION_REJECTED',422)}
         if(!result.verified || !result.authenticationInfo.userVerified)throw new Failure('AUTHENTICATION_REJECTED',422)
         db.prepare('UPDATE credentials SET counter=?,device_type=?,backed_up=? WHERE id=?').run(result.authenticationInfo.newCounter,result.authenticationInfo.credentialDeviceType,Number(result.authenticationInfo.credentialBackedUp),c.id)
-        session.authAt=now();session.credentialId=c.id
-        const receipt={verified:true,userVerified:true,origin,rpID:'localhost',verifiedAt:new Date(now()).toISOString(),credentialDeviceType:result.authenticationInfo.credentialDeviceType,biometricMethod:'not_disclosed',signatureVerified:true}
+        for(const key of ['lastMock','wallet','walletPending','operation','bundle'])delete session[key]
+        session.userID=cloud?c.owner:'local';session.authAt=now();session.credentialId=c.id
+        const receipt={verified:true,userVerified:true,origin,rpID,verifiedAt:new Date(now()).toISOString(),credentialDeviceType:result.authenticationInfo.credentialDeviceType,biometricMethod:'not_disclosed',signatureVerified:true}
         session.lastAuthentication=receipt;event('passkey_authentication','verified');send(200,receipt);return
       }
+      if(cloud && path.startsWith('/api/card/'))throw new Failure('LOCAL_CARD_UNAVAILABLE',404)
       if(path==='/api/card/probe') {
         empty();if(nativeBusy)throw new Failure('CARD_BUSY',409)
         nativeBusy=true
@@ -173,9 +202,9 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
         if(session.lastMock?.outcome!=='verified' || session.lastMock.credentialHash!==hash(session.credentialId))throw new Failure('MOCK_IDENTITY_REQUIRED',409)
         if(Object.keys(input).some(k=>!['address','chainId'].includes(k)) || !isAddress(input.address||'') || !Number.isSafeInteger(input.chainId) || input.chainId<1)throw new Failure('INVALID_WALLET')
         const address=getAddress(input.address)
-        const binding={version:1,scope:'simulation-only',subject:session.lastMock.mockSubjectId,credentialHash:hash(session.credentialId),wallet:address,chainId:input.chainId,origin,nonce:randomBytes(16).toString('hex')}
+        const binding={version:1,scope:'simulation-only',subject:session.lastMock.mockSubjectId,credentialHash:hash(session.credentialId),wallet:address,chainId:input.chainId,origin,appURL,nonce:randomBytes(16).toString('hex')}
         const bindingHash=hash(canonical(binding)),expires=now()+120000
-        const message=createSiweMessage({domain:`localhost:${port}`,address,statement:'Simulation only. No real rights or funds are transferred.',uri:origin+'/app/',version:'1',chainId:input.chainId,nonce:binding.nonce,issuedAt:new Date(now()),expirationTime:new Date(expires),resources:['urn:jw:binding:'+bindingHash]})
+        const message=createSiweMessage({domain:site.host,address,statement:'Simulation only. No real rights or funds are transferred.',uri:appURL,version:'1',chainId:input.chainId,nonce:binding.nonce,issuedAt:new Date(now()),expirationTime:new Date(expires),resources:['urn:jw:binding:'+bindingHash]})
         session.walletPending={binding,bindingHash,message,expires};delete session.wallet;delete session.operation
         send(200,{message,address});return
       }
@@ -193,8 +222,8 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
         if(!session.wallet || session.lastMock?.outcome!=='verified' || session.lastMock.credentialHash!==hash(session.credentialId) || session.wallet.binding.subject!==session.lastMock.mockSubjectId || session.wallet.binding.credentialHash!==hash(session.credentialId))throw new Failure('WALLET_BINDING_REQUIRED',409)
         const intent={version:1,scope:'simulation-only',operationId:randomBytes(16).toString('hex'),subject:session.lastMock.mockSubjectId,credentialHash:hash(session.credentialId),bindingHash:session.wallet.bindingHash,workId:'mock:demo-track-001',action:'approve-demo-license',counterparty:'mock:listener',terms:'test-only-no-legal-license',wallet:session.wallet.address,chainId:session.wallet.chainId,nonce:'0x'+randomBytes(32).toString('hex'),expiresAt:Math.floor((now()+120000)/1000)}
         const intentHash=hash(canonical(intent)),challenge=Buffer.from('jw-operation-v1:'+intentHash+':'+intent.nonce)
-        const c=rows().find(c=>c.id===session.credentialId)
-        const options=await generateAuthenticationOptions({rpID:'localhost',challenge,userVerification:'required',timeout:120000,allowCredentials:[{id:c.id,transports:JSON.parse(c.transports)}]})
+        const c=rows(session).find(c=>c.id===session.credentialId)
+        const options=await generateAuthenticationOptions({rpID,challenge,userVerification:'required',timeout:120000,allowCredentials:[{id:c.id,transports:JSON.parse(c.transports)}]})
         session.pending={type:'operation',challenge:options.challenge,expires:intent.expiresAt*1000}
         session.operation={intent,intentHash}
         send(200,{intent,passkeyOptions:options,typedData:operationTypedData(intent)});return
@@ -202,11 +231,11 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
       if(path==='/api/operation/approve') {
         assertAuth(session);const pending=consume(session,'operation'),op=session.operation;delete session.operation
         if(!op || !session.wallet || Object.keys(input).some(k=>!['assertion','walletSignature'].includes(k)))throw new Failure('OPERATION_NOT_FOUND',409)
-        const c=rows().find(c=>c.id===session.credentialId)
+        const c=rows(session).find(c=>c.id===session.credentialId)
         if(!c || input.assertion?.id!==c.id)throw new Failure('UNKNOWN_CREDENTIAL',422)
         let auth,ok=false
         try {
-          auth=await verifyAuthenticationResponse({response:input.assertion,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:'localhost',requireUserVerification:true,credential:{id:c.id,publicKey:Buffer.from(c.public_key,'base64url'),counter:c.counter}})
+          auth=await verifyAuthenticationResponse({response:input.assertion,expectedChallenge:pending.challenge,expectedOrigin:origin,expectedRPID:rpID,requireUserVerification:true,credential:{id:c.id,publicKey:Buffer.from(c.public_key,'base64url'),counter:c.counter}})
           ok=await verifyTypedData({...operationTypedData(op.intent),address:session.wallet.address,signature:input.walletSignature})
         }catch{throw new Failure('OPERATION_SIGNATURE_REJECTED',422)}
         if(!auth.verified||!auth.authenticationInfo.userVerified||!ok)throw new Failure('OPERATION_SIGNATURE_REJECTED',422)
@@ -239,8 +268,8 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
       if(path==='/api/passkeys/delete') {
         empty();assertAuth(session)
         db.prepare('DELETE FROM credentials WHERE id=?').run(session.credentialId)
-        for(const s of sessions.values()){s.authAt=0;delete s.pending;delete s.credentialId;delete s.lastAuthentication;delete s.lastMock;delete s.wallet;delete s.walletPending;delete s.operation;delete s.bundle}
-        event('passkey_deletion','deleted');send(200,{deleted:true,credentialCount:rows().length});return
+        for(const s of sessions.values()){if(cloud&&s.userID!==session.userID)continue;s.authAt=0;delete s.pending;delete s.credentialId;delete s.lastAuthentication;delete s.lastMock;delete s.wallet;delete s.walletPending;delete s.operation;delete s.bundle}
+        event('passkey_deletion','deleted');send(200,{deleted:true,credentialCount:rows(session).length});return
       }
       throw new Failure('NOT_FOUND',404)
     }catch(error){send(error instanceof Failure?error.status:500,{code:error instanceof Failure?error.message:'INTERNAL_ERROR'})}

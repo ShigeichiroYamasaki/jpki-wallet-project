@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: services/cloud-prototype/Dockerfile
+    environment:
+      PUBLIC_ORIGIN: https://shigeichiroyamasaki.github.io
+      APP_PATH: /jpki-wallet-project/prototype/
+      API_ORIGIN: https://${PUBLIC_HOST:?Set PUBLIC_HOST to the API HTTPS hostname}
+    volumes:
+      - cloud-data:/data
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:?Set PUBLIC_HOST}
+    ports:
+      - '[::]:80:80'
+      - '[::]:443:443'
+    volumes:
+      - ./Caddyfile.cloud:/etc/caddy/Caddyfile:ro
+      - cloud-caddy-data:/data
+      - cloud-caddy-config:/config
+    restart: unless-stopped
+volumes:
+  cloud-data:
+  cloud-caddy-data:
+  cloud-caddy-config:

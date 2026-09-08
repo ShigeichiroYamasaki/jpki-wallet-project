@@ -1,0 +1,12 @@
+**
+!services
+!services/mac-prototype
+!services/mac-prototype/*.mjs
+!services/mac-prototype/package.json
+!services/mac-prototype/package-lock.json
+!services/scaffold
+!services/scaffold/mock-jpki.mjs
+!services/cloud-prototype
+!services/cloud-prototype/server.mjs
+!services/cloud-prototype/public
+!services/cloud-prototype/public/**

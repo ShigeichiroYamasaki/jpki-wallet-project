@@ -1,21 +1,22 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JPKI Wallet · Mac実機ラボ</title><link rel="stylesheet" href="/app/style.css"><script defer src="/app/webauthn.js"></script><script defer src="/app/app.js"></script></head>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JPKI Wallet · ユーザPC実機ラボ</title><link rel="stylesheet" href="/app/style.css"><script defer src="/app/webauthn.js"></script><script defer src="/app/app.js"></script></head>
 <body><main>
-<header><div><span class="eyebrow">JPKI WALLET / LOCAL LAB</span><h1>このMacで、確かめる。</h1><p>カードの接続と、パスキーの登録・認証を一つずつ試します。</p></div><span class="pill">このMac内で実行 · PFは模倣</span></header>
+<header><div><span class="eyebrow">JPKI WALLET / LOCAL LAB</span><h1>ユーザPCで、確かめる。</h1><p>カードの接続と、パスキーの登録・認証を一つずつ試します。</p></div><span class="pill">ユーザPC内で実行 · PFは模倣</span></header>
 <div class="notice">ここは実機検証用です。カード署名・パスキー認証・PFの模倣結果を分けて表示します。実際の本人確認・権利証明・法的な推定効の確認を行うものではありません。</div>
 <div id="global" role="status" aria-live="polite"></div>
-<section class="environment"><h2>実行環境</h2><dl><div><dt>接続先</dt><dd id="origin">確認中</dd></div><div><dt>WebAuthn</dt><dd id="webauthn">確認中</dd></div><div><dt>Mac内の認証器</dt><dd id="platform">確認中</dd></div></dl><p class="sub">SafariまたはChromeで開いてください。localhost以外や埋込みブラウザでは、パスキー機能を使えない場合があります。</p></section>
+<section class="environment"><h2>実行環境</h2><dl><div><dt>接続先</dt><dd id="origin">確認中</dd></div><div><dt>WebAuthn</dt><dd id="webauthn">確認中</dd></div><div><dt>ユーザPC内の認証器</dt><dd id="platform">確認中</dd></div></dl><p class="sub">SafariまたはChromeで開いてください。localhost以外や埋込みブラウザでは、パスキー機能を使えない場合があります。</p></section>
 <div class="grid">
-<section class="panel"><span class="step">01 / PASSKEY</span><h2>Touch IDで登録・認証</h2><p>まず試験用パスキーを登録し、続けて新しいチャレンジで認証します。macOSの画面で<strong>このMacのTouch ID</strong>を選んで指を触れてください。</p>
+<section class="panel"><span class="step">01 / PASSKEY</span><h2>Touch IDで登録・認証</h2><p>まず試験用パスキーを登録し、続けて新しいチャレンジで認証します。macOSの画面で<strong>ユーザPCのTouch ID</strong>を選んで指を触れてください。</p>
 <div class="status" id="passkey-status">環境を確認しています</div>
-<div class="actions"><button id="register" disabled>パスキーを登録</button><button id="authenticate" class="secondary" disabled>パスキーで認証</button></div>
+<p id="registration-help" class="notice" role="status">ブラウザのパスキー対応を確認しています。</p>
+<div class="actions"><button id="register" aria-describedby="registration-help" disabled>パスキーを登録</button><button id="authenticate" class="secondary" disabled>パスキーで認証</button></div>
 <p class="sub" id="credential-count"></p>
 <dl id="auth-result" class="result" hidden></dl>
 <p class="sub">生体情報は取得しません。認証成功時は公開鍵署名と利用者検証（UV）を確認します。UVだけでは指紋かMacのパスワードかを判別できません。同期パスキーが別端末に存在する場合もあります。</p>
 <details><summary>試験用の登録を削除する</summary><p class="sub">直前に認証したパスキーの公開鍵登録をこのアプリから削除します。macOSの「パスワード」に保存されたパスキー自体は残るので、必要ならご自身で削除してください。</p><button class="quiet" id="delete" disabled>認証した登録を削除</button></details>
 </section>
-<section class="panel"><span class="step">02 / CARD READER</span><h2>カードリーダーを確認</h2><p>リーダーをこのMacへ接続し、マイナンバーカードをセットしてください。PC/SCの接続状態を確認します。</p><div class="status" id="card-status">未確認</div><ul id="readers"></ul><button id="probe" class="secondary">接続状態を確認</button><p class="sub" id="jpki"></p>
-<details><summary>カード内の鍵でローカル署名を試す</summary><p>パスキー認証後に実行できます。JPKI署名用暗証番号はMacの専用ダイアログで入力します。Webページやチャットには入力しないでください。</p><label class="consent"><input id="consent" type="checkbox"> 契約・権利移転ではない、このMac内だけの署名試験に同意します。</label><button id="sign" disabled>ローカル署名試験を開始</button><div id="sign-result" class="status" role="status"></div><p class="sub">公開仕様に基づく試験実装です。実カードでの成功はまだ未確認です。暗証番号を誤ると試行回数が減るため自動再試行しません。証明書・署名原本はネイティブ処理内だけで扱い、ブラウザへ返しません。</p></details>
+<section class="panel"><span class="step">02 / CARD READER</span><h2>カードリーダーを確認</h2><p>リーダーをユーザPCへ接続し、マイナンバーカードをセットしてください。PC/SCの接続状態を確認します。</p><div class="status" id="card-status">未確認</div><ul id="readers"></ul><button id="probe" class="secondary">接続状態を確認</button><p class="sub" id="jpki"></p>
+<details><summary>カード内の鍵でローカル署名を試す</summary><p>パスキー認証後に実行できます。JPKI署名用暗証番号はMacの専用ダイアログで入力します。Webページやチャットには入力しないでください。</p><label class="consent"><input id="consent" type="checkbox"> 契約・権利移転ではない、ユーザPC内だけの署名試験に同意します。</label><button id="sign" disabled>ローカル署名試験を開始</button><div id="sign-result" class="status" role="status"></div><p class="sub">公開仕様に基づく試験実装です。実カードでの成功はまだ未確認です。暗証番号を誤ると試行回数が減るため自動再試行しません。証明書・署名原本はネイティブ処理内だけで扱い、ブラウザへ返しません。</p></details>
 </section>
 </div>
 <section class="panel"><span class="step">03 / SIMULATION</span><h2>PF応答を模倣する</h2><p>パスキーで認証したセッションから合成データを試します。カードの人物情報と結び付けません。</p><div class="actions"><label>合成人物<select id="person"><option value="person-a">person-a</option><option value="person-b">person-b</option></select></label><label>シナリオ<select id="scenario"><option value="valid">成功</option><option value="renewed">証明書更新</option><option value="revoked">失効</option><option value="expired">期限切れ</option><option value="invalid_signature">署名不一致</option><option value="timeout">結果不明</option><option value="unavailable">PF障害</option></select></label><button id="mock" disabled>模倣を実行</button></div><pre id="mock-result">まだ実行していません</pre></section>

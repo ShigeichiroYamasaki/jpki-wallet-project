@@ -11,3 +11,6 @@ work/
 .local/
 .venv/
 __pycache__/
+
+# Generated Pages prototype assets
+docs/public/prototype/

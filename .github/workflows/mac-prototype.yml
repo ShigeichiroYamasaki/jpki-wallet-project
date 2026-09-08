@@ -2,9 +2,9 @@ name: Validate Mac prototype logic
 on:
   push:
     branches: [main]
-    paths: ['services/mac-prototype/**', '.github/workflows/mac-prototype.yml']
+    paths: ['services/mac-prototype/**', 'services/cloud-prototype/**', '.github/workflows/mac-prototype.yml']
   pull_request:
-    paths: ['services/mac-prototype/**', '.github/workflows/mac-prototype.yml']
+    paths: ['services/mac-prototype/**', 'services/cloud-prototype/**', '.github/workflows/mac-prototype.yml']
   workflow_dispatch:
 permissions:
   contents: read

@@ -18,29 +18,32 @@ function authenticator(origin) {
   const cose=encodeCBOR(new Map([[1,2],[3,-7],[-1,1],[-2,Buffer.from(jwk.x,'base64url')],[-3,Buffer.from(jwk.y,'base64url')]]))
   function client(challenge,type,atOrigin=origin){return Buffer.from(JSON.stringify({type,challenge,origin:atOrigin,crossOrigin:false}))}
   return {id:b64(id),
-    registration(options){const len=Buffer.alloc(2);len.writeUInt16BE(id.length);return {id:b64(id),rawId:b64(id),type:'public-key',authenticatorAttachment:'platform',clientExtensionResults:{},response:{clientDataJSON:b64(client(options.challenge,'webauthn.create')),transports:['internal'],attestationObject:b64(encodeCBOR(new Map([['fmt','none'],['attStmt',new Map()],['authData',Buffer.concat([sha('localhost'),Buffer.from([0x45]),Buffer.alloc(4),Buffer.alloc(16),len,id,cose])]])))}}},
-    authentication(options,{uv=true,rp='localhost',atOrigin=origin,counter=1}={}){const n=Buffer.alloc(4);n.writeUInt32BE(counter);const data=Buffer.concat([sha(rp),Buffer.from([uv?5:1]),n]);const c=client(options.challenge,'webauthn.get',atOrigin);return {id:b64(id),rawId:b64(id),type:'public-key',clientExtensionResults:{},response:{clientDataJSON:b64(c),authenticatorData:b64(data),signature:b64(sign('sha256',Buffer.concat([data,sha(c)]),privateKey))}}}
+    registration(options){const len=Buffer.alloc(2);len.writeUInt16BE(id.length);return {id:b64(id),rawId:b64(id),type:'public-key',authenticatorAttachment:'platform',clientExtensionResults:{},response:{clientDataJSON:b64(client(options.challenge,'webauthn.create')),transports:['internal'],attestationObject:b64(encodeCBOR(new Map([['fmt','none'],['attStmt',new Map()],['authData',Buffer.concat([sha(new URL(origin).hostname),Buffer.from([0x45]),Buffer.alloc(4),Buffer.alloc(16),len,id,cose])]])))}}},
+    authentication(options,{uv=true,rp=new URL(origin).hostname,atOrigin=origin,counter=1}={}){const n=Buffer.alloc(4);n.writeUInt32BE(counter);const data=Buffer.concat([sha(rp),Buffer.from([uv?5:1]),n]);const c=client(options.challenge,'webauthn.get',atOrigin);return {id:b64(id),rawId:b64(id),type:'public-key',clientExtensionResults:{},response:{clientDataJSON:b64(c),authenticatorData:b64(data),signature:b64(sign('sha256',Buffer.concat([data,sha(c)]),privateKey))}}}
   }
 }
 
-test('HTTP + real cryptographic WebAuthn verification with a software test authenticator',async t=>{
+for(const cloud of [false,true,"pages"])test((cloud?'Cloud: ':'Local: ')+'HTTP + real cryptographic WebAuthn verification with a software test authenticator',async t=>{
   const dir=await mkdtemp(join(tmpdir(),'jw-mac-test-'))
-  const port=19387,origin=`http://localhost:${port}`;let clock=Date.now(),signCalls=0
-  const {server}=await createApp({port,dataDir:dir,now:()=>clock,card:async(operation)=>{
+  const split=cloud==='pages';const port=split?19389:cloud?19388:19387,origin=split?'https://shigeichiroyamasaki.github.io':cloud?'https://wallet.example.test':`http://localhost:${port}`;const apiOrigin='https://api.example.test';
+  async function fetch(url,options={}){return new Promise((resolve,reject)=>{const req=request(`http://127.0.0.1:${port}${new URL(url).pathname}`,{method:options.method||'GET',headers:{Host:new URL(split?apiOrigin:origin).host,...(split?{Origin:origin}:{}),...options.headers}},res=>{let body='';res.on('data',c=>body+=c);res.on('end',()=>resolve({status:res.statusCode,headers:{get:key=>Array.isArray(res.headers[key])?res.headers[key][0]:res.headers[key]},json:async()=>JSON.parse(body)}))});req.on('error',reject);req.end(options.body)})}
+let clock=Date.now(),signCalls=0
+  const {server}=await createApp({port,cloudOrigin:cloud?origin:undefined,apiOrigin:split?apiOrigin:undefined,appPath:split?'/jpki-wallet-project/prototype/':'/app/',dataDir:dir,now:()=>clock,card:async(operation)=>{
     if(operation==='sign'){signCalls++;return {code:'LOCAL_SIGNATURE_VERIFIED',signatureVerified:true,pin:'never-export',certificate:'never-export'}}
     return {code:'CARD_ABSENT',readers:[{name:'test-reader',cardPresent:false}],jpkiInstalled:true}
   }})
   await new Promise(resolve=>server.listen(port,'127.0.0.1',resolve))
   t.after(async()=>{await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true})})
   let cookie,csrf
-  async function bootstrap(){const r=await fetch(`${origin}/api/bootstrap`);cookie=r.headers.get('set-cookie').split(';')[0];csrf=(await r.json()).csrf}
-  async function post(path,input={},headers={}){const r=await fetch(`${origin}/api/${path}`,{method:'POST',headers:{Cookie:cookie,Origin:origin,'X-CSRF-Token':csrf,'Content-Type':'application/json',...headers},body:JSON.stringify(input)});return {status:r.status,data:await r.json()}}
+  async function bootstrap(){const r=await fetch(`${origin}/api/bootstrap`);const data=await r.json();cookie=split?data.sessionToken:r.headers.get('set-cookie').split(';')[0];csrf=data.csrf;if(split)assert.equal(r.headers.get('access-control-allow-origin'),origin)}
+  async function post(path,input={},headers={}){const r=await fetch(`${origin}/api/${path}`,{method:'POST',headers:{...(split?{Authorization:'Bearer '+cookie}:{Cookie:cookie}),Origin:origin,'X-CSRF-Token':csrf,'Content-Type':'application/json',...headers},body:JSON.stringify(input)});return {status:r.status,data:await r.json()}}
   await bootstrap()
   await t.test('rejects hostile Origin, missing CSRF, Host rebinding and cross-site reads',async()=>{
     assert.equal((await post('card/probe',{}, {Origin:'https://evil.example'})).status,403)
     assert.equal((await post('card/probe',{}, {'X-CSRF-Token':'wrong'})).status,403)
-    assert.equal(await new Promise(resolve=>{const req=request(origin+'/api/bootstrap',{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.end()}),403)
-    assert.equal((await fetch(`${origin}/api/bootstrap`,{headers:{'Sec-Fetch-Site':'cross-site'}})).status,403)
+    assert.equal(await new Promise(resolve=>{const req=request(`http://127.0.0.1:${port}/api/bootstrap`,{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.end()}),403)
+    assert.equal((await fetch(`${origin}/api/bootstrap`,{headers:{'Sec-Fetch-Site':'cross-site',...(split?{Origin:'https://evil.example'}:{})}})).status,403)
+    if(split){assert.equal((await fetch(origin+'/api/bootstrap',{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type,x-csrf-token'}})).status,204);assert.equal((await fetch(origin+'/api/bootstrap',{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'x-evil'}})).status,403)}
   })
   const auth=authenticator(origin)
   await t.test('registration verifies an actual attestation structure, then consumes its challenge',async()=>{
@@ -68,6 +71,7 @@ test('HTTP + real cryptographic WebAuthn verification with a software test authe
   await t.test('mock identity remains simulation-only and card outputs are projected',async()=>{
     const r=await post('mock/verify',{scenario:'valid',person:'person-a'});assert.equal(r.data.isMock,true)
     assert.equal((await post('mock/verify',{scenario:'valid',person:'person-a',certificate:'real'})).status,400)
+    if(cloud){assert.equal((await post('card/probe')).status,404);assert.equal((await post('card/sign',{consent:'local-test-only'})).status,404);assert.equal(signCalls,0);return}
     assert.equal((await post('card/sign',{consent:'yes'})).status,400)
     const signed=await post('card/sign',{consent:'local-test-only'});assert.equal(signed.data.pfVerified,false);assert.equal(signed.data.certificate,undefined);assert.equal(signed.data.pin,undefined);assert.equal(signCalls,1)
     const report=await post('report');assert.equal(report.data.cardEvidenceIncluded,false);assert.equal(report.data.rightsGranted,false)
@@ -87,6 +91,20 @@ test('HTTP + real cryptographic WebAuthn verification with a software test authe
     assert.equal((await verifyBundle(tampered,exported.trustedIssuerPublicKey)).verified,false)
     assert.equal((await verifyBundle(exported.bundle,'not-a-trusted-key')).verified,false)
   })
+  if(cloud)await t.test('separate users cannot inherit credentials or wallet evidence',async()=>{
+    const first={cookie,csrf};await bootstrap()
+    assert.equal((await post('evidence/export')).status,401)
+    const second=authenticator(origin);const options=await post('passkeys/register/options')
+    assert.equal(options.data.excludeCredentials.length,0)
+    assert.equal((await post('passkeys/register/verify',second.registration(options.data))).status,200)
+    const login=await post('passkeys/auth/options');assert.deepEqual(login.data.allowCredentials,[])
+    assert.equal((await post('passkeys/auth/verify',second.authentication(login.data))).status,200)
+    assert.equal((await post('evidence/export')).status,409)
+    const add=await post('passkeys/register/options');assert.equal(add.data.excludeCredentials.length,1);assert.equal(add.data.excludeCredentials[0].id,second.id)
+    assert.equal((await post('passkeys/delete')).status,200)
+    cookie=first.cookie;csrf=first.csrf
+    assert.equal((await post('report')).status,200)
+  })
   await t.test('expired challenges are refused',async()=>{
     const o=await post('passkeys/auth/options');clock+=121000
     assert.equal((await post('passkeys/auth/verify',auth.authentication(o.data,{counter:3}))).status,410)
@@ -95,6 +113,6 @@ test('HTTP + real cryptographic WebAuthn verification with a software test authe
     const o=await post('passkeys/auth/options');const response=auth.authentication(o.data,{counter:3});assert.equal((await post('passkeys/auth/verify',response)).status,200)
     assert.equal((await post('passkeys/delete')).data.deleted,true)
     assert.equal((await post('report')).status,401)
-    assert.equal((await post('passkeys/auth/options')).status,409)
+    assert.equal((await post('passkeys/auth/options')).status,cloud?200:409)
   })
 })

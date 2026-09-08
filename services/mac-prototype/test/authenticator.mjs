@@ -12,4 +12,3 @@ export function authenticator(origin) {
     authentication(options,{uv=true,rp=new URL(origin).hostname,atOrigin=origin,counter=1}={}){const n=Buffer.alloc(4);n.writeUInt32BE(counter);const data=Buffer.concat([sha(rp),Buffer.from([uv?5:1]),n]);const c=client(options.challenge,'webauthn.get',atOrigin);return {id:b64(id),rawId:b64(id),type:'public-key',clientExtensionResults:{},response:{clientDataJSON:b64(c),authenticatorData:b64(data),signature:b64(sign('sha256',Buffer.concat([data,sha(c)]),privateKey))}}}
   }
 }
-

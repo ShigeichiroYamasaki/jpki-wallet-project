@@ -75,14 +75,22 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
   prune()
   const cleanup=setInterval(prune,60000).unref()
   const server=createServer(async(req,res)=>{
-    res.setHeader('Cache-Control','no-store')
+    res.setHeader('Cache-Control','no-store, max-age=0')
+    res.setHeader('Pragma','no-cache')
     res.setHeader('X-Content-Type-Options','nosniff')
     res.setHeader('Referrer-Policy','no-referrer')
     res.setHeader('X-Frame-Options','DENY')
-    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+    res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=(), payment=(), usb=()')
+    res.setHeader('Cross-Origin-Opener-Policy','same-origin')
+    if(!split)res.setHeader('Cross-Origin-Resource-Policy','same-origin')
+    if(cloud)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains')
+    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests")
     const send=(status,data)=>{if(res.writableEnded)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data))}
     try {
       if(req.headers.host!==apiSite.host)throw new Failure('LOCALHOST_REQUIRED',403)
+      const contentLength=req.headers['content-length']
+      if(req.headers['transfer-encoding'] && contentLength!==undefined)throw new Failure('AMBIGUOUS_MESSAGE_LENGTH',400)
+      if(contentLength!==undefined && (!/^\d+$/.test(contentLength) || Number(contentLength)>32768))throw new Failure('BODY_TOO_LARGE',413)
       if(split){
         if(req.headers.origin!==origin)throw new Failure('ORIGIN_REJECTED',403)
         res.setHeader('Access-Control-Allow-Origin',origin)
@@ -97,7 +105,9 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
         }
       }
       if(!split && req.headers['sec-fetch-site'] && !['none','same-origin'].includes(req.headers['sec-fetch-site']))throw new Failure('CROSS_SITE_REJECTED',403)
-      const path=new URL(req.url,origin).pathname
+      const requestURL=new URL(req.url,origin)
+      if(requestURL.search && requestURL.pathname.startsWith('/api/'))throw new Failure('QUERY_NOT_ALLOWED',400)
+      const path=requestURL.pathname
       const assets={'/':'index.html','/app/':'index.html','/app/app.js':'app.js','/app/style.css':'style.css'}
       if(req.method==='GET' && (assets[path] || path==='/app/webauthn.js')) {
         const file=path==='/app/webauthn.js'?join(here,'node_modules/@simplewebauthn/browser/dist/bundle/index.umd.min.js'):join(publicDir||join(here,'public'),assets[path])
@@ -123,7 +133,7 @@ export async function createApp({port=18080,dataDir=join(here,'.local'),card=nat
       if(req.headers.origin!==origin || !equal(req.headers['x-csrf-token'],session.csrf))throw new Failure('ORIGIN_OR_CSRF_REJECTED',403)
       if(now()-session.window>60000){session.window=now();session.count=0}
       if(++session.count>60)throw new Failure('RATE_LIMITED',429)
-      if(!(req.headers['content-type']||'').startsWith('application/json'))throw new Failure('JSON_REQUIRED',415)
+      if(!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(req.headers['content-type']||''))throw new Failure('JSON_REQUIRED',415)
       let chunks=[],size=0
       for await(const chunk of req){size+=chunk.length;if(size>32768)throw new Failure('BODY_TOO_LARGE',413);chunks.push(chunk)}
       let input

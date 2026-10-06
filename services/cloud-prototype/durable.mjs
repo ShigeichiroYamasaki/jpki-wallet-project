@@ -7,10 +7,17 @@ import {createApp} from '../mac-prototype/server.mjs'
 // Every request works on a private snapshot. A response is released only after
 // conditional persistence succeeds; concurrent revisions cannot overwrite state.
 export function durableServer({store,origin,apiOrigin,appPath='/jpki-wallet-project/prototype/'}){
+ const apiHost=new URL(apiOrigin).host
  return createServer(async(req,res)=>{
-  res.setHeader('Cache-Control','no-store')
+  res.setHeader('Cache-Control','no-store, max-age=0')
+  res.setHeader('X-Content-Type-Options','nosniff')
+  res.setHeader('Referrer-Policy','no-referrer')
   res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin')
-  const fail=(status,code)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify({code}))}
+  const fail=(status,code)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify({code}))}
+  if(req.headers.host!==apiHost)return fail(403,'HOST_REJECTED')
+  const declared=req.headers['content-length']
+  if(req.headers['transfer-encoding'] && declared!==undefined)return fail(400,'AMBIGUOUS_MESSAGE_LENGTH')
+  if(declared!==undefined && (!/^\d+$/.test(declared) || Number(declared)>32768))return fail(413,'BODY_TOO_LARGE')
   if(req.url==='/healthz'&&req.method==='GET'){res.end('{"status":"alive","provider":"mock"}');return}
   if(req.headers.origin!==origin)return fail(403,'ORIGIN_REJECTED')
   if(!req.url?.startsWith('/api/'))return fail(404,'NOT_FOUND')
@@ -25,7 +32,9 @@ export function durableServer({store,origin,apiOrigin,appPath='/jpki-wallet-proj
    app=await createApp({dataDir:dir,cloudOrigin:origin,apiOrigin,appPath,initialSessions:current.state?.sessions||[]})
    await new Promise((resolve,reject)=>{app.server.once('error',reject);app.server.listen(0,'127.0.0.1',resolve)})
    const response=await new Promise((resolve,reject)=>{
-    const headers={...req.headers,host:new URL(apiOrigin).host};delete headers.connection;delete headers['transfer-encoding'];headers['content-length']=String(size)
+    const headers={host:apiHost}
+    for(const name of ['origin','authorization','content-type','x-csrf-token','access-control-request-method','access-control-request-headers'])if(req.headers[name]!==undefined)headers[name]=req.headers[name]
+    headers['content-length']=String(size)
     const outgoing=request({hostname:'127.0.0.1',port:app.server.address().port,path:req.url,method:req.method,headers},incoming=>{
      const pieces=[];incoming.on('data',c=>pieces.push(c));incoming.on('end',()=>resolve({status:incoming.statusCode,headers:incoming.headers,body:Buffer.concat(pieces)}))
     });outgoing.on('error',reject);outgoing.end(Buffer.concat(chunks))
@@ -36,7 +45,7 @@ export function durableServer({store,origin,apiOrigin,appPath='/jpki-wallet-proj
     const database=(await readFile(join(dir,'prototype.sqlite'))).toString('base64')
     await store.save({database,sessions},current.generation)
    }
-   delete response.headers.connection;delete response.headers['transfer-encoding']
+   delete response.headers.connection;delete response.headers['transfer-encoding'];delete response.headers['set-cookie']
    res.writeHead(response.status,response.headers);res.end(response.body)
   }catch(error){fail(error.code==='CONFLICT'?409:503,error.code==='CONFLICT'?'STATE_CONFLICT':'STATE_STORAGE_UNAVAILABLE')}
   finally{if(app)await new Promise(resolve=>app.server.close(resolve));if(dir)await rm(dir,{recursive:true,force:true})}

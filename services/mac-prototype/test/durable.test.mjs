@@ -13,7 +13,7 @@ test('durable state survives server replacement; failed writes never report succ
  let session=await get()
  async function post(path,input={}){const r=await fetch(base+'/api/'+path,{method:'POST',headers:{Host:apiHost,Origin:origin,Authorization:'Bearer '+session.sessionToken,'X-CSRF-Token':session.csrf,'Content-Type':'application/json'},body:JSON.stringify(input)});return {status:r.status,data:await r.json()}}
  const a=authenticator(origin);const o=await post('passkeys/register/options')
- assert.equal((await post('passkeys/register/verify',a.registration(o.data))).status,200)
+ const registration=await post('passkeys/register/verify',a.registration(o.data));assert.equal(registration.status,200,JSON.stringify(registration.data))
  await new Promise(r=>server.close(r));await start()
  const login=await post('passkeys/auth/options');assert.equal((await post('passkeys/auth/verify',a.authentication(login.data))).status,200)
  assert.equal((await post('mock/verify',{person:'person-a',scenario:'valid'})).status,200)

@@ -48,7 +48,7 @@ let clock=Date.now(),signCalls=0
   await t.test('enforces strict API framing, media types, query handling and security headers',async()=>{
     const r=await fetch(`${origin}/api/bootstrap`)
     assert.equal(r.headers.get('x-content-type-options'),'nosniff')
-    assert.equal(r.headers.get('permissions-policy'),'camera=(), microphone=(), geolocation=()')
+    assert.equal(r.headers.get('permissions-policy'),'camera=(), microphone=(), geolocation=(), payment=(), usb=()')
     assert.equal(r.headers.get('cache-control'),'no-store, max-age=0')
     if(cloud)assert.equal(r.headers.get('strict-transport-security'),'max-age=31536000; includeSubDomains')
     assert.equal((await fetch(`${origin}/api/bootstrap?debug=true`)).status,400)

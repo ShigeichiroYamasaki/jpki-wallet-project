@@ -26,7 +26,7 @@ function authenticator(origin) {
 for(const cloud of [false,true,"pages"])test((cloud?'Cloud: ':'Local: ')+'HTTP + real cryptographic WebAuthn verification with a software test authenticator',async t=>{
   const dir=await mkdtemp(join(tmpdir(),'jw-mac-test-'))
   const split=cloud==='pages';const port=split?19389:cloud?19388:19387,origin=split?'https://shigeichiroyamasaki.github.io':cloud?'https://wallet.example.test':`http://localhost:${port}`;const apiOrigin='https://api.example.test';
-  async function fetch(url,options={}){return new Promise((resolve,reject)=>{const req=request(`http://127.0.0.1:${port}${new URL(url).pathname}`,{method:options.method||'GET',headers:{Host:new URL(split?apiOrigin:origin).host,...(split?{Origin:origin}:{}),...options.headers}},res=>{let body='';res.on('data',c=>body+=c);res.on('end',()=>resolve({status:res.statusCode,headers:{get:key=>Array.isArray(res.headers[key])?res.headers[key][0]:res.headers[key]},json:async()=>JSON.parse(body)}))});req.on('error',reject);req.end(options.body)})}
+  async function fetch(url,options={}){return new Promise((resolve,reject)=>{const req=request(`http://127.0.0.1:${port}${new URL(url).pathname}${new URL(url).search}`,{method:options.method||'GET',headers:{Host:new URL(split?apiOrigin:origin).host,...(split?{Origin:origin}:{}),...options.headers}},res=>{let body='';res.on('data',c=>body+=c);res.on('end',()=>resolve({status:res.statusCode,headers:{get:key=>Array.isArray(res.headers[key])?res.headers[key][0]:res.headers[key]},json:async()=>JSON.parse(body)}))});req.on('error',reject);req.end(options.body)})}
 let clock=Date.now(),signCalls=0
   const {server}=await createApp({enableRealCard:!cloud,port,cloudOrigin:cloud?origin:undefined,apiOrigin:split?apiOrigin:undefined,appPath:split?'/jpki-wallet-project/prototype/':'/app/',dataDir:dir,now:()=>clock,card:async(operation)=>{
     if(operation==='sign'){signCalls++;return {code:'LOCAL_SIGNATURE_VERIFIED',signatureVerified:true,pin:'never-export',certificate:'never-export'}}
@@ -44,6 +44,16 @@ let clock=Date.now(),signCalls=0
     assert.equal(await new Promise(resolve=>{const req=request(`http://127.0.0.1:${port}/api/bootstrap`,{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.end()}),403)
     assert.equal((await fetch(`${origin}/api/bootstrap`,{headers:{'Sec-Fetch-Site':'cross-site',...(split?{Origin:'https://evil.example'}:{})}})).status,403)
     if(split){assert.equal((await fetch(origin+'/api/bootstrap',{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type,x-csrf-token'}})).status,204);assert.equal((await fetch(origin+'/api/bootstrap',{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'x-evil'}})).status,403)}
+  })
+  await t.test('enforces strict API framing, media types, query handling and security headers',async()=>{
+    const r=await fetch(`${origin}/api/bootstrap`)
+    assert.equal(r.headers.get('x-content-type-options'),'nosniff')
+    assert.equal(r.headers.get('permissions-policy'),'camera=(), microphone=(), geolocation=()')
+    assert.equal(r.headers.get('cache-control'),'no-store, max-age=0')
+    if(cloud)assert.equal(r.headers.get('strict-transport-security'),'max-age=31536000; includeSubDomains')
+    assert.equal((await fetch(`${origin}/api/bootstrap?debug=true`)).status,400)
+    assert.equal((await post('card/probe',{}, {'Content-Type':'application/json-patch+json'})).status,415)
+    assert.equal((await post('card/probe',{padding:'x'.repeat(33000)})).status,413)
   })
   const auth=authenticator(origin)
   await t.test('registration verifies an actual attestation structure, then consumes its challenge',async()=>{
